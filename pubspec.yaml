@@ -33,14 +33,17 @@ dependencies:
   path_provider: ^1.4.0
   dio: ^3.0.9
   epub: ^2.0.0
+  flutter_easyloading: ^2.2.2
   permission_handler: ^4.2.0+hotfix.1
   flutter_spinkit: ^4.1.2+1
   badges: ^1.1.3
   flutter_money_formatter: ^0.8.3
-  font_awesome_flutter: ^8.10.0
   sqflite: ^1.3.0
   encrypt: ^4.1.0
-  
+  flutter_secure_storage: ^3.3.5
+  animations: ^1.1.2
+  data_connection_checker: ^0.3.4
+  modal_bottom_sheet: ^1.0.0+1
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^0.1.3
@@ -73,8 +76,12 @@ flutter:
     - images/livros.jpg
     - images/revistas.jpg
     - images/bd.jpg
-    - images/bg.jpg
     - images/pattner.jpg
+    - images/bgBook.jpg
+    - images/bibliotec/Bib1.png
+    - images/bibliotec/Bib2.png
+    - images/bibliotec/Bib3.png
+    
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.

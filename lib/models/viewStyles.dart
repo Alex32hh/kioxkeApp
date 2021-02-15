@@ -1,8 +1,13 @@
+import 'dart:convert';
+
+import 'package:animations/animations.dart';
 import 'package:badges/badges.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_icons/flutter_icons.dart';
 import 'package:flutter_money_formatter/flutter_money_formatter.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:kioxkenewf/models/functions.dart';
 import 'package:kioxkenewf/views/detalhes.dart';
 
 const TextStyle optionStyle = TextStyle(fontSize: 15, fontWeight: FontWeight.bold);
@@ -73,11 +78,40 @@ Widget cardComments(){
     );
 }
 
-Widget produts(String imageUrl,String titulo,String preco){
+
+Widget cardItem(String titulo,String imag,String preco){
+   FlutterMoneyFormatter precoProduto = FlutterMoneyFormatter(amount: double.parse(preco));
+  return Card(
+      child:CachedNetworkImage(
+        imageUrl: imag,
+        imageBuilder: (context, imageProvider) => ListTile(
+        contentPadding: EdgeInsets.all(5),
+        leading: Container(
+          height: 60,
+          width: 100,
+          decoration: BoxDecoration(
+          image: DecorationImage(
+              image: imageProvider,
+              fit: BoxFit.cover,
+             ),
+          ),
+        ),
+        title: Text('$titulo'),
+        subtitle: Text('${precoProduto.output.nonSymbol} kzs',style:TextStyle(fontSize:15,fontWeight: FontWeight.bold,color: primaryColor)),
+        // trailing: Icon(Icons.more_vert),
+        isThreeLine: true,
+      ),
+        placeholder: (context, url) => SpinKitCubeGrid(color: primaryColor,size: 40.0,),
+        errorWidget: (context, url, error) => Icon(Icons.error),
+      ),
+    );
+}
+
+Widget produts(Function action,int counter,String imageUrl,String titulo,String preco,int id,String data,String hora,String estado,Function update,Function download){
   FlutterMoneyFormatter precoProduto = FlutterMoneyFormatter(amount: double.parse(preco));
   return Container(
-  height: 110,
-  child: Card(
+    height: estado == "2"?100:140,
+    child: Card(
       child:CachedNetworkImage(
         imageUrl: imageUrl,
         imageBuilder: (context, imageProvider) => ListTile(
@@ -93,16 +127,40 @@ Widget produts(String imageUrl,String titulo,String preco){
              ),
           ),
         ),
-        title: Text('$titulo'),
+        title:RichText(
+              overflow: TextOverflow.ellipsis,
+              text: TextSpan(
+                  style:subtitle,
+                  text:'$titulo'),
+                  ),
         subtitle:Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [ 
-            Text('Total a pagar:${precoProduto.output.nonSymbol} kzs'),
-
-            FlatButton(onPressed: (){}, 
-              color:primaryColor,
-              child: Text("Desistir da compra")
-            ),
+            Text('Encomenda Nº:$id $estado'),
+            Text('${data.replaceAll('-',':')} - $hora'),
+            Text('Total: ${precoProduto.output.nonSymbol} kzs',style:TextStyle(fontSize:15,fontWeight: FontWeight.bold,color: primaryColor),),
+            estado == "0"?
+             Row(
+               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                 FlatButton(
+                    onPressed: () async{showNormalAlert(context,(){deletaCarrinho(id.toString());update();},"Aviso","Tem certeza que deseja desistir da compra?");}, 
+                    color:primaryColor,
+                    child: Text("Cancelar")
+                 ), Text("Pendente")
+              ]
+              ):estado == "1"?
+              Row(
+               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                FlatButton(onPressed: (){download();update();}, 
+                  color: Colors.green,
+                  child: Text("Transferir",style: TextStyle(color:Colors.white)),
+                ), Text("Concluido")
+             ]
+              ):estado == "2"?
+              Text("Concluido")
+              :SizedBox()
 
             ]),
         trailing: Column(
@@ -111,7 +169,7 @@ Widget produts(String imageUrl,String titulo,String preco){
             Badge(
                   position: BadgePosition.topEnd(),
                   badgeColor:Colors.red,
-                  badgeContent: Text((0).toString(),style: TextStyle(color: Colors.white, fontSize: 9),),
+                  badgeContent: Text((counter).toString(),style: TextStyle(color: Colors.white, fontSize: 9),),
                   child: Icon(Icons.arrow_drop_down,color: Colors.grey)
                   ),
                
@@ -120,7 +178,8 @@ Widget produts(String imageUrl,String titulo,String preco){
               padding: EdgeInsets.all(10),
               width: 30,
               height: 30,
-              child:CircularProgressIndicator(
+              child: estado == "2"? Icon(Icons.check_circle,color:Colors.green, size: 20,):
+               CircularProgressIndicator(
                 strokeWidth:5
               )
             ),
@@ -136,11 +195,13 @@ Widget produts(String imageUrl,String titulo,String preco){
   );
 }
 
-Widget horizontalBox(BuildContext context,String titulo,String imageUrl,String autor,String likes,String urlBook,String preco,String descricao,String id,int isFavorite){
+
+Widget horizontalBox(Function openAction,BuildContext context,String titulo,String imageUrl,String autor,String likes,String urlBook,String preco,String descricao,String id,int isFavorite){
   FlutterMoneyFormatter precoProduto = FlutterMoneyFormatter(amount: double.parse(preco));
   return  GestureDetector(
     onTap:(){
-     Navigator.push(context,MaterialPageRoute(builder: (context) => Datalhes(urlBook,titulo,imageUrl,autor,likes,preco,descricao,id,isFavorite: isFavorite,)));
+    //  Navigator.push(context,MaterialPageRoute(builder: (context) => Datalhes(urlBook,titulo,imageUrl,autor,likes,preco,descricao,id,isFavorite: isFavorite,)));
+    openAction();
     },
     child:
   Card( 
@@ -222,10 +283,10 @@ Widget horizontalBox(BuildContext context,String titulo,String imageUrl,String a
   )));
  }
 
-Widget verticalBox(BuildContext context,String titulo,String imageUrl,String autor,String likes,String urlBook,String preco,String descricao,String id,int isFavorite){
+Widget verticalBox(Function openAction, BuildContext context,String titulo,String imageUrl,String autor,String likes,String urlBook,String preco,String descricao,String id,int isFavorite){
   return  GestureDetector(
     onTap:(){
-     Navigator.push(context,MaterialPageRoute(builder: (context) => Datalhes(urlBook,titulo,imageUrl,autor,likes,preco,descricao,id,isFavorite: isFavorite,)));
+      openAction();
     },
     child:Container(
      width: 150,
@@ -347,7 +408,6 @@ showNormalAlert(BuildContext context,Function callBack,String title,String body)
     },
   );
 }
-
 
 
 showConfirm(BuildContext context,String title,String body) {

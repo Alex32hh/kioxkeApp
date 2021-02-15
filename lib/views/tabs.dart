@@ -34,7 +34,7 @@ class _TabsState extends State<Tabs> {
           indicatorColor:primaryColor,
         tabs: [
           Tab(text: "Todos",),
-          Tab(text: "Brevemente",),
+          Tab(text: "Populares",),
           Tab(text: "Categorias",),
         ],
       ),
@@ -42,8 +42,10 @@ class _TabsState extends State<Tabs> {
   
   body: TabBarView(
   children: [
-    _boxView(context,"Coleção","Brevemente","Mais Lidos"),
-    _boxView(context,"Mais Populares","Mais Recentes","Mais Lidos"),
+    Icon(Icons.warning),
+    Icon(Icons.warning),
+    // _boxView(context,"A","B","C"),
+    // _boxView(context,"A","B","C"),
     Icon(Icons.warning),
   ],    
     ),
@@ -93,35 +95,38 @@ class _TabsState extends State<Tabs> {
            Container(
             width: MediaQuery.of(context).size.width,
             height: 240,
-             child: ListView.builder(
-             scrollDirection: Axis.horizontal,
-                itemCount: colecao.length,
-                itemBuilder: (BuildContext context, int index) {
-                  return colecao.length > 0? verticalBox(context,colecao[index]['titulo'],colecao[index]['capa'],colecao[index]['autor'],colecao[index]['likes'],colecao[index]['src'],colecao[index]['preco'],colecao[index]['descricao'],colecao[index]['id'],int.parse(colecao[index]['IsFavorite'])):SizedBox();
-                })
+            child: Text("Brevemente")
+            //  child: ListView.builder(
+            //  scrollDirection: Axis.horizontal,
+            //     itemCount: colecao.length,
+            //     itemBuilder: (BuildContext context, int index) {
+            //       return colecao.length > 0? verticalBox(context,colecao[index]['titulo'],colecao[index]['capa'],colecao[index]['autor'],colecao[index]['likes'],colecao[index]['src'],colecao[index]['preco'],colecao[index]['descricao'],colecao[index]['id'],int.parse(colecao[index]['IsFavorite'])):SizedBox();
+            //     })
              ),
 
          pageTitle("$titulo2",context),
              Container(
             width: MediaQuery.of(context).size.width,
             height: 240,
-             child: ListView.builder(
-             scrollDirection: Axis.horizontal,
-                itemCount: populares.length,
-                itemBuilder: (BuildContext context, int index) {
-                  return populares.length > 0?verticalBox(context,populares[index]['titulo'],populares[index]['capa'],populares[index]['autor'],populares[index]['likes'],populares[index]['src'],populares[index]['preco'],populares[index]['descricao'],populares[index]['id'],int.parse(populares[index]['IsFavorite'])):SizedBox();
-                })
+            child: Text("Brevemente")
+            //  child: ListView.builder(
+            //  scrollDirection: Axis.horizontal,
+            //     itemCount: populares.length,
+            //     itemBuilder: (BuildContext context, int index) {
+            //       return populares.length > 0?verticalBox(context,populares[index]['titulo'],populares[index]['capa'],populares[index]['autor'],populares[index]['likes'],populares[index]['src'],populares[index]['preco'],populares[index]['descricao'],populares[index]['id'],int.parse(populares[index]['IsFavorite'])):SizedBox();
+            //     })
              ),
          pageTitle("$titulo3",context),
              Container(
             width: MediaQuery.of(context).size.width,
             height: 240,
-             child: ListView.builder(
-             scrollDirection: Axis.horizontal,
-                itemCount: maislidos.length,
-                itemBuilder: (BuildContext context, int index) {
-                  return maislidos.length > 0?verticalBox(context,maislidos[index]['titulo'],maislidos[index]['capa'],maislidos[index]['autor'],maislidos[index]['likes'],maislidos[index]['src'],maislidos[index]['preco'],maislidos[index]['descricao'],maislidos[index]['id'],int.parse(maislidos[index]['IsFavorite'])):SizedBox();
-                })
+            child: Text("Brevemente")
+            //  child: ListView.builder(
+            //  scrollDirection: Axis.horizontal,
+            //     itemCount: maislidos.length,
+            //     itemBuilder: (BuildContext context, int index) {
+            //       return maislidos.length > 0?verticalBox(context,maislidos[index]['titulo'],maislidos[index]['capa'],maislidos[index]['autor'],maislidos[index]['likes'],maislidos[index]['src'],maislidos[index]['preco'],maislidos[index]['descricao'],maislidos[index]['id'],int.parse(maislidos[index]['IsFavorite'])):SizedBox();
+            //     })
              ),
           ])
           )

@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:badges/badges.dart';
 import 'package:epub_viewer/epub_viewer.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_icons/flutter_icons.dart';
 import 'package:kioxkenewf/models/offinedabase.dart';
 import 'package:kioxkenewf/models/viewStyles.dart';
 
@@ -22,16 +23,20 @@ class _BibliotecaState extends State<Biblioteca> {
 
   @override
   Widget build(BuildContext context) {
-    loadLocalBook();
-    
+    // loadLocalBook();
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
         elevation: 0.0,
         backgroundColor: primaryColor,
-       title: Text("Biblioteca Local"),
+       title: Text("Biblioteca"),
+       actions: [
+         IconButton(icon: Icon(Feather.home), onPressed: (){
+           
+         })
+       ],
       ),
-      body: Container(
+      body: queryRowsCard.length == 0? emptyWid():Container(
         child: GridView.count(
         crossAxisCount: 2 ,
         children: List.generate(queryRowsCard.length,(index){
@@ -40,6 +45,59 @@ class _BibliotecaState extends State<Biblioteca> {
       ),
       ),
     );
+  }
+
+  Widget emptyWid(){
+    return Container(
+        color: Colors.white,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+               width: MediaQuery.of(context).size.width,
+               height: 210,
+              decoration: BoxDecoration(
+                image: DecorationImage(image: AssetImage("images/bibliotec/Bib1.png"),fit: BoxFit.contain, colorFilter: new ColorFilter.mode(Colors.black.withOpacity(0.2), BlendMode.dst),)
+              ),
+              child: GestureDetector(
+                onTap:(){
+                  print("tapped");
+                }
+              ),
+              ),
+              Row(
+                children: [
+                  Container(
+                    width: MediaQuery.of(context).size.width/2,
+                    height: 100,
+                    decoration: BoxDecoration(
+                      image: DecorationImage(image: AssetImage("images/bibliotec/Bib2.png"),fit: BoxFit.contain, colorFilter: new ColorFilter.mode(Colors.black.withOpacity(0.2), BlendMode.dst),)
+                    ),
+                    child: GestureDetector(
+                      onTap:(){
+                       print("tapped");
+                       }
+                     ),
+                  ),
+                    Container(
+                    width: MediaQuery.of(context).size.width/2,
+                    height: 100,
+                    decoration: BoxDecoration(
+                      image: DecorationImage(image: AssetImage("images/bibliotec/Bib3.png"),fit: BoxFit.contain, colorFilter: new ColorFilter.mode(Colors.black.withOpacity(0.2), BlendMode.dst),)
+                    ),
+                    child: GestureDetector(
+                      onTap:(){
+                       print("tapped");
+                       }
+                     ),
+                  ),
+
+                ],
+              )
+            ],
+        )
+      );
   }
 
   Widget boxBook(String linkImg,String linkPath){
@@ -89,7 +147,7 @@ class _BibliotecaState extends State<Biblioteca> {
     });
  }
 
-openBookall(String src) async{
+ openBookall(String src) async{
     if (src.isNotEmpty) {
         EpubViewer.setConfig(
                 identifier: 'androidBook',

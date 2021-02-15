@@ -21,8 +21,9 @@ class Datalhes extends StatefulWidget {
    
    final String url,titulo,capa,autor,like,preco,descricao,id;
    final int isFavorite;
+   final Function closeF;
 
-   Datalhes(this.url,this.titulo,this.capa,this.autor,this.like,this.preco,this.descricao,this.id,{this.isFavorite});
+   Datalhes(this.closeF,this.url,this.titulo,this.capa,this.autor,this.like,this.preco,this.descricao,this.id,{this.isFavorite});
 }
 
 class _DatalhesState extends State<Datalhes> {
@@ -57,29 +58,61 @@ class _DatalhesState extends State<Datalhes> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-       appBar: AppBar(
-        elevation: 0.0,
-        backgroundColor: primaryColor,
-        centerTitle: true,
-       title: Text("Detalhes"),
-        actions: [
-           IconButton(icon:favactive==0?Icon(Icons.favorite,color: Colors.red):Icon(Icons.favorite_border), onPressed: () => setfavorite()),
-
-           !idDownloaded?IconButton(icon:!isonCard?Icon(Icons.add_shopping_cart, size: 30):Icon(Feather.shopping_bag,color: Colors.red, size: 30), onPressed: () =>setCarrinho()):
-           IconButton(icon: Icon(Feather.share_2), onPressed: () => {}),
-        ]
-      ),
        body: SingleChildScrollView( child:Column(
          mainAxisSize: MainAxisSize.max,
          children: [
-    Padding(padding: EdgeInsets.all(10), 
-    child:CachedNetworkImage(
-    imageUrl: widget.capa,
-    imageBuilder: (context, imageProvider) => Container(
-    width: MediaQuery.of(context).size.width,
-    height: 190,
-    child: Row(
+    Padding(padding: EdgeInsets.all(0), 
+      child:CachedNetworkImage(
+      imageUrl: widget.capa,
+      imageBuilder: (context, imageProvider) => 
+    Container(
+      padding: EdgeInsets.only(left: 10,right: 10),
+      width: MediaQuery.of(context).size.width,
+      height: 300,
+       decoration: BoxDecoration(
+         image: DecorationImage(image: AssetImage("images/bgBook.jpg"),fit: BoxFit.fill, colorFilter: new ColorFilter.mode(Colors.black.withOpacity(0.1), BlendMode.dst),)
+       ),
+      child: Column(
       children: [
+      Container(
+        width: MediaQuery.of(context).size.width,
+        height: 70,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children:[
+            CircleAvatar(
+                backgroundColor:Color(0xFF0E3311).withOpacity(0.5),
+              child: IconButton(
+              padding:EdgeInsets.all(8.0),
+              color: Colors.white,
+              icon: Icon(Icons.close_rounded), onPressed: widget.closeF)),
+
+          Container(
+              child: Row(
+                 mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children:[
+                   CircleAvatar(
+               backgroundColor:Color(0xFF0E3311).withOpacity(0.5),
+              child: IconButton(
+              padding:EdgeInsets.all(8.0),
+              color: Colors.white,
+              icon:favactive==0?Icon(Icons.favorite,color: Colors.red):Icon(Icons.favorite), onPressed: () => setfavorite(),)),
+                   SizedBox(width: 5,),
+                   CircleAvatar(
+                    backgroundColor:Color(0xFF0E3311).withOpacity(0.5),
+                    child:  !idDownloaded?IconButton(icon:!isonCard?Icon(Icons.add_shopping_cart, size: 25,color: Colors.white,):Icon(Feather.shopping_bag,color: primaryColor, size: 25), onPressed: () =>setCarrinho()):
+                     IconButton(icon: Icon(Feather.share_2), onPressed: () => {})
+                  )
+                   ])
+
+            )
+           
+           
+          ]
+        ),
+      ),
+      Row(children: [
         Container(
           width: 130,
           height: 180,
@@ -128,7 +161,17 @@ class _DatalhesState extends State<Datalhes> {
                    children: [
                   Container(
                    width: double.infinity,
-                   child:
+                   child:isonCard?FlatButton(
+                   padding: EdgeInsets.zero,
+                   color: Colors.red,
+                   onPressed: () async{
+                   
+                    setCarrinho();
+                     widget.closeF();
+                    // showConfirm(context,"Confirmação","Item Removido do carrinho com sucesso");
+                   },
+                   child:Text("Remover do Carrinho",style: TextStyle(color:Colors.white),)
+                  ):
                   idDownloaded==false?
                   FlatButton(
                    padding: EdgeInsets.zero,
@@ -141,9 +184,9 @@ class _DatalhesState extends State<Datalhes> {
                           Navigator.pushReplacement(context,MaterialPageRoute(builder: (context) => Pay(widget.url,widget.id+"book",widget.id,widget.capa,widget.preco,widget.titulo,widget.descricao)));
                     } else {
                         // startDownload(context,widget.url,widget.id+"book");
-                            Navigator.pushReplacement(context,MaterialPageRoute(builder: (context) => Pay(widget.url,widget.id+"book",widget.id,widget.capa,widget.preco,widget.titulo,widget.descricao)));
+                          Navigator.pushReplacement(context,MaterialPageRoute(builder: (context) => Pay(widget.url,widget.id+"book",widget.id,widget.capa,widget.preco,widget.titulo,widget.descricao)));
                     }
-                    
+                      //  widget.closeF();
                    },
                    child:Text("Comprar",style: TextStyle(color:Colors.white),)
                   ):
@@ -151,6 +194,7 @@ class _DatalhesState extends State<Datalhes> {
                    padding: EdgeInsets.zero,
                    color: Colors.green,
                    onPressed: () async{
+
                       final SharedPreferences prefs = await _prefs;
                       PermissionStatus permission = await PermissionHandler().checkPermissionStatus(PermissionGroup.storage);
                     if (permission != PermissionStatus.granted) {
@@ -174,7 +218,7 @@ class _DatalhesState extends State<Datalhes> {
 
         )
       ],
-    ),
+    )]),
   ),
   placeholder: (context, url) => shimerEfect(context),
     errorWidget: (context, url, error) => Icon(Icons.error),
@@ -291,15 +335,21 @@ class _DatalhesState extends State<Datalhes> {
 
   void setCarrinho() async{
   final SharedPreferences prefs = await _prefs;
-   setState(() {
+
        saveList(widget.id,widget.titulo,widget.descricao,widget.preco,widget.capa,widget.url,"carrinho","carrinho",1);
+       
        isonCard =  !isonCard;
+
+       if(!isonCard){
+         int value = await DatabaseHelper.instance.deleteBook(widget.titulo);
+         cardDeliteItems(widget.id);
+       }
+
         _isonCard = prefs.setBool(widget.titulo+'_carrinho', isonCard).then((bool success) {
         return isonCard;
        
         });
-
-   });
+   setState(() {  });
   }
 
 

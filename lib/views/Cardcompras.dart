@@ -1,12 +1,16 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_icons/flutter_icons.dart';
 import 'package:flutter_money_formatter/flutter_money_formatter.dart';
 import 'dart:ui';
 import 'package:kioxkenewf/models/database.dart';
+import 'package:kioxkenewf/models/functions.dart';
 import 'package:kioxkenewf/models/viewStyles.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
 
 class CardCompras extends StatefulWidget {
   
@@ -21,19 +25,20 @@ class _CardComprasState extends State<CardCompras> {
   String totalPagarLabel;
   double totalPagar = 0;
 
+  bool sedOne = false;
+  String sharEncode = generateRandomString(9);
+
   List<Map<String,dynamic>> queryRowsCard = new List<Map<String,dynamic>>();
   
   @override
   void initState() {
-    //TODO: implement initState
     super.initState();
      waitinTime();
 
-    FlutterMoneyFormatter precoProduto = FlutterMoneyFormatter(amount:totalPagar);
-      totalPagarLabel = precoProduto.output.nonSymbol;
+     FlutterMoneyFormatter precoProduto = FlutterMoneyFormatter(amount:totalPagar);
+     totalPagarLabel = precoProduto.output.nonSymbol;
      
-    setState(() {});
-    
+     setState(() {});
   }
   @override
   Widget build(BuildContext context) {
@@ -69,7 +74,9 @@ class _CardComprasState extends State<CardCompras> {
                 ),
                 FlatButton(
                   color:Colors.amber,
-                  onPressed:(){},
+                  onPressed:() async{
+                    showNormalAlert(context,(){deployCadsOnly();},"Aviso","Tem certeza que deseja terminar a Compra?");
+                  },
                  child: Container(
                   width: 150,
                   height:40,
@@ -89,7 +96,7 @@ class _CardComprasState extends State<CardCompras> {
               child:ListView.builder(
             itemCount: queryRowsCard.length,
             itemBuilder: (BuildContext context, int index){
-            return queryRowsCard[index]['tipo'] == 1?horisontal(titulo:queryRowsCard[index]['nome'], imageUrl:queryRowsCard[index]['imageUrl'], autor:"", likes:"0", urlBook:queryRowsCard[index]['urlBook'], preco:queryRowsCard[index]['preco'], descricao:queryRowsCard[index]['descricao'], id:queryRowsCard[index]['id'].toString(),qtdview: queryRowsCard[index]['quantidade']):SizedBox();
+            return queryRowsCard[index]['tipo'] == 1?horisontal(titulo:queryRowsCard[index]['nome'], imageUrl:queryRowsCard[index]['imageUrl'], autor:"", likes:"0", urlBook:queryRowsCard[index]['urlBook'], preco:queryRowsCard[index]['preco'], descricao:queryRowsCard[index]['descricao'], id:queryRowsCard[index]['id'].toString(),qtdview: queryRowsCard[index]['quantidade'],idcloud: queryRowsCard[index]['idcloud']):SizedBox();
             },
       
       )
@@ -103,11 +110,11 @@ class _CardComprasState extends State<CardCompras> {
   }
 
    waitinTime() {
-    return new Timer(Duration(seconds: 1),()async{loadAsset();});
+    return new Timer(Duration(milliseconds: 1),()async{loadAsset();});
   }
 
 
-  Widget horisontal({String titulo,String imageUrl,String autor,String likes,String urlBook,String preco,String descricao,String id,int qtdview}){
+Widget horisontal({String titulo,String imageUrl,String autor,String likes,String urlBook,String preco,String descricao,String id,int qtdview,int idcloud}){
   FlutterMoneyFormatter precoProduto = FlutterMoneyFormatter(amount: double.parse(preco));
   return Card( 
   color: Colors.white,
@@ -221,11 +228,12 @@ class _CardComprasState extends State<CardCompras> {
                           height: 30,
                           child: IconButton(icon:Icon(Feather.trash,size: 25, color:Colors.red,), onPressed: () async{
                            
-                           showAlertDialog(context,() async{
+                               showAlertDialog(context,() async{
                              
                               final SharedPreferences prefs = await _prefs;
                               prefs.remove(titulo+"_carrinho");
                               int value = await DatabaseHelper.instance.delete(int.parse(id));
+                              cardDeliteItems(idcloud.toString());
                               loadAsset();
                               setState(() {});
 
@@ -248,22 +256,71 @@ class _CardComprasState extends State<CardCompras> {
   ));
  }
 
-  loadAsset() async {
+loadAsset() async {
+    EasyLoading.show(status: 'A carregar');
      queryRowsCard = await DatabaseHelper.instance.queryAll(1);
      totalPagar = 0;
      for(int a=0;a < queryRowsCard.length;a++){
-      if( queryRowsCard[a]['tipo'] == 1){
+      if(queryRowsCard[a]['tipo'] == 1){
         String preco =  queryRowsCard[a]['preco'];
         totalPagar+= double.parse(preco) *  queryRowsCard[a]['quantidade'];
-        // totalPagar+= double.parse(preco);
-        // print(queryRowsCard[a]['quantidade']);
       }
 
      }
     FlutterMoneyFormatter precoProduto = FlutterMoneyFormatter(amount:totalPagar);
     totalPagarLabel = precoProduto.output.nonSymbol;
     setState(() {});
-    
+    EasyLoading.dismiss();
 }
 
+
+void deployCadsOnly() async {
+    EasyLoading.show(status: 'Aguarde');
+     SharedPreferences prefs = await SharedPreferences.getInstance();
+    queryRowsCard = await DatabaseHelper.instance.queryAll(1);
+    for(int a=0;a < queryRowsCard.length;a++){
+      if(queryRowsCard[a]['tipo'] == 1){
+            if(!sedOne){
+              SharedPreferences prefs = await SharedPreferences.getInstance();
+              String email = prefs.getString("email").toString();
+              final getEmalSender = await http.get('http://manifexto.com/Kioxke_App/sendCartDetails.php?user_email=$email&user_price=${queryRowsCard[a]['preco'].toString()}&book_title=${queryRowsCard[a]['nome'].toString()}&book_id=$sharEncode');
+              sedOne = true;
+            }
+
+            cardItems(id:queryRowsCard[a]['idcloud'].toString(), titulo:queryRowsCard[a]['nome'], capa:queryRowsCard[a]['imageUrl'],preco:queryRowsCard[a]['preco'].toString(),encode: sharEncode,total: totalPagar.toString());
+            int value = await DatabaseHelper.instance.deleteBook(queryRowsCard[a]['nome']);
+            prefs.setBool(queryRowsCard[a]['nome']+'_carrinho', false);
+      }
+    }
+    
+     EasyLoading.showSuccess('Sucesso',dismissOnTap:false);
+    loadAsset();
+      EasyLoading.dismiss();
+  }
+
+
+void cardItems({String id,String titulo,String capa,String preco,String encode,String total}) async{
+   EasyLoading.show(status: 'A carregar');
+   SharedPreferences prefs = await SharedPreferences.getInstance();
+       final response = await http.post('https://www.visualfoot.com/api/cardSave.php',
+    headers: <String, String>{
+      'Content-Type': 'application/json; charset=UTF-8',
+    },
+    // urlLocal,nome,id,capa,preco,titulo;
+    body: jsonEncode(<String, String>{
+       'book_id':id.toString(),
+       'book_title':titulo.toString(),
+       'book_capa':capa.toString(),
+       'book_preco':preco.toString(),
+       'book_buy_id':prefs.getString("email").toString(),
+       'id_carrinho':encode.toString(),
+       'total_pagar':total.toString()
+    }),
+
+  );
+    var encodeFirst = json.encode(response.body);
+    var data = json.decode(encodeFirst);
+    EasyLoading.dismiss();
+ }
 }
+

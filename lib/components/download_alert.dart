@@ -38,11 +38,13 @@ class _DownloadAlertState extends State<DownloadAlert> {
         //Check if download is complete and close the alert dialog
         if (receivedBytes == totalBytes) {
           saveListLocalBook(widget.bookname,widget.imageUrl,widget.path);
+          updateStateCompra(widget.bookname);
           Navigator.pop(context, '${Constants.formatBytes(total, 1)}');
         }
       },
     );
   }
+  
 
   @override
   void initState() {

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:badges/badges.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:http/http.dart';
 import 'package:kioxkenewf/models/viewStyles.dart';
@@ -65,11 +66,11 @@ class _UserEditState extends State<UserEdit> {
               ),
               ),),
                SizedBox(height: 20,),
-              inputlista("Carregando...",false,nomeedit,Icons.person,true), 
-              inputlista("Carregando...",false,sobreNomedit,Icons.person_outline_outlined,true),
-              inputlista("Carregando...",false,emailedit,Icons.alternate_email,false),
-              inputlista("Carregando...",false,numeroedit,Icons.phone,true),
-              inputlista("Carregando...",false,moradaedit,Icons.pin_drop,true),
+              inputlista("",false,nomeedit,Icons.person,true), 
+              inputlista("",false,sobreNomedit,Icons.person_outline_outlined,true),
+              inputlista("",false,emailedit,Icons.alternate_email,false),
+              inputlista("",false,numeroedit,Icons.phone,true),
+              inputlista("",false,moradaedit,Icons.pin_drop,true),
                 SizedBox(height: 5,),
               loginButton("Alterar Senha",Colors.grey,Colors.white,(){
                    Navigator.push(context, MaterialPageRoute(builder: (context)=> EditSenha()));
@@ -134,6 +135,7 @@ class _UserEditState extends State<UserEdit> {
 }
 
  getUserData(String email) async{
+   EasyLoading.show(status: 'A carregar');
   final response =await http.get("https://www.visualfoot.com/api/getUserData.php?email=$email");
     if (response.statusCode == 200) {
       userdataList = json.decode(response.body) as List;
@@ -149,11 +151,13 @@ class _UserEditState extends State<UserEdit> {
     } else {
       throw Exception('Failed to load photos');
     }
+    EasyLoading.dismiss();
  }
 
 
 
  updateData(BuildContext context) async {
+    EasyLoading.show(status: 'A carregar');
     String url = 'http://www.visualfoot.com/api/editarConta.php?&use_nome=${nomeedit.text}&use_lastname=${sobreNomedit.text}&use_telefone=${numeroedit.text}&use_morada=${moradaedit.text}';
     Response response = await get(url);
     if(response.body.contains("successfully") == true){
@@ -163,6 +167,7 @@ class _UserEditState extends State<UserEdit> {
         showConfirm(context,"Confirmação","Erro ao atualizar os dados!");
         getUserData(emailedit.text);
     }
+     EasyLoading.dismiss();
  }
-
+ 
 }

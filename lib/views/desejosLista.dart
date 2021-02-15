@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:kioxkenewf/models/functions.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -58,7 +59,7 @@ class _WishlistWidgetState extends State<WishlistWidget> {
             itemCount: queryRows.length,
             itemBuilder: (BuildContext context, int index){
             
-            return queryRows[index]['tipo'] == 0?horisontal(context:context,titulo:queryRows[index]['nome'], imageUrl:queryRows[index]['imageUrl'], autor:"", likes:"0", urlBook:queryRows[index]['urlBook'], preco:queryRows[index]['preco'], descricao:queryRows[index]['descricao'], id:queryRows[index]['id'].toString()):SizedBox();
+            return queryRows[index]['tipo'] == 0?horisontal(context:context,titulo:queryRows[index]['nome'], imageUrl:queryRows[index]['imageUrl'], autor:"", likes:"0", urlBook:queryRows[index]['urlBook'], preco:queryRows[index]['preco'], descricao:queryRows[index]['descricao'], id:queryRows[index]['id'].toString(),idcloud: queryRows[index]['idcloud']):SizedBox();
         },
       )
      )
@@ -66,7 +67,7 @@ class _WishlistWidgetState extends State<WishlistWidget> {
   }
 
 
- Widget horisontal({BuildContext context,String titulo,String imageUrl,String autor,String likes,String urlBook,String preco,String descricao,String id}){
+ Widget horisontal({BuildContext context,String titulo,String imageUrl,String autor,String likes,String urlBook,String preco,String descricao,String id,int idcloud}){
   FlutterMoneyFormatter precoProduto = FlutterMoneyFormatter(amount: double.parse(preco));
   return 
   Card( 
@@ -133,7 +134,9 @@ class _WishlistWidgetState extends State<WishlistWidget> {
                   Container(
                           height: 30,
                           child: IconButton(icon:Icon(Feather.shopping_bag,size: 25, color:Colors.green,), onPressed: (){
-                  Navigator.push(context,MaterialPageRoute(builder: (context) => Datalhes(urlBook,titulo,imageUrl,autor,likes,preco,descricao,id)));
+                  Navigator.push(context,MaterialPageRoute(builder: (context) => Datalhes((){
+                    Navigator.pop(context);
+                  },urlBook,titulo,imageUrl,autor,likes,preco,descricao,id)));
                           })
                         ),
                   Container(
@@ -144,6 +147,7 @@ class _WishlistWidgetState extends State<WishlistWidget> {
                                 final SharedPreferences prefs = await _prefs;
                                 prefs.remove(titulo+"_favorite");
                                 int value = await DatabaseHelper.instance.delete(int.parse(id));
+                                desejosDeliteItems(idcloud.toString());
                                 loadAsset();
                                 setState(() {});
                             });

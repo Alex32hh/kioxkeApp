@@ -7,11 +7,8 @@ import 'package:kioxkenewf/models/functions.dart';
 import 'package:kioxkenewf/models/viewStyles.dart';
 import 'package:kioxkenewf/util/const.dart';
 import 'package:kioxkenewf/views/Cardcompras.dart';
-import 'package:kioxkenewf/views/paySucess.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-import 'WatingPay.dart';
 class Pay extends StatefulWidget {
 
   @override
@@ -73,9 +70,10 @@ Widget build(BuildContext context) {
               children: [
                 loginButton("Adicionar no Carrinho",Colors.green,false, () async => setCarrinho()),
                 // loginButton("Terminar Compra",Colors.red,true, () async => startDownload(widget.url,widget.nome))
-                 loginButton("Terminar Compra",Colors.red,true, () async => {
-                  Navigator.push(context,MaterialPageRoute(builder: (context) => WaitPay(widget.url, widget.nome,widget.id,widget.capa,widget.preco,widget.titulo)))
-                 })
+                //   loginButton("Terminar Compra",Colors.red,true, () async => {
+                //   Navigator.push(context,MaterialPageRoute(builder: (context) => WaitPay(widget.url, widget.nome,widget.id,widget.capa,widget.preco,widget.titulo)))
+                //  })
+                 loginButton("Terminar Compra",Colors.red,true, () async => setCarrinho())
               ],
             )
           )
@@ -199,59 +197,59 @@ Widget loginButton(String labelText,Color cor,bool isSubmited,Function callback)
    ));
 }
 
-startDownload(String url, String filename) async {
+// startDownload(String url, String filename) async {
 
-      Directory appDocDir = Platform.isAndroid
-        ? await getExternalStorageDirectory()
-        : await getApplicationDocumentsDirectory();
+//       Directory appDocDir = Platform.isAndroid
+//         ? await getExternalStorageDirectory()
+//         : await getApplicationDocumentsDirectory();
 
-    if (Platform.isAndroid) {
-      Directory(appDocDir.path.split('Android')[0] + '${Constants.appName}').createSync();
-    }
+//     if (Platform.isAndroid) {
+//       Directory(appDocDir.path.split('Android')[0] + '${Constants.appName}').createSync();
+//     }
 
-    String path = Platform.isIOS
-        ? appDocDir.path + '/$filename.epub'
-        : appDocDir.path.split('Android')[0] +
-            '${Constants.appName}/$filename.epub';
+//     String path = Platform.isIOS
+//         ? appDocDir.path + '/$filename.epub'
+//         : appDocDir.path.split('Android')[0] +
+//             '${Constants.appName}/$filename.epub';
 
-    print(path);
-    File file = File(path);
-    if (!await file.exists()) {
-      await file.create();
-        concluido = true;
+//     print(path);
+//     File file = File(path);
+//     if (!await file.exists()) {
+//       await file.create();
+//         concluido = true;
 
-    } else {
-      await file.delete();
-      await file.create();
-      concluido = true;
+//     } else {
+//       await file.delete();
+//       await file.create();
+//       concluido = true;
        
-    }
+//     }
 
-    showDialog(
-      barrierDismissible: false,
-      context: context,
-      builder: (context) => DownloadAlert(
-        url: url,
-        path: path,
-        bookname: widget.nome,
-        imageUrl: widget.capa
-      ),
-    ).then((v) async {
+//     showDialog(
+//       barrierDismissible: false,
+//       context: context,
+//       builder: (context) => DownloadAlert(
+//         url: url,
+//         path: path,
+//         bookname: widget.nome,
+//         imageUrl: widget.capa
+//       ),
+//     ).then((v) async {
 
-     final SharedPreferences prefs = await _prefs;
-     final String pathaved = path;
-      if (v != null) {
-        setState(() {
-          concluido = true;
-        _path = prefs.setString(filename, pathaved).then((bool success) {
-          return pathaved;
-        });
+//      final SharedPreferences prefs = await _prefs;
+//      final String pathaved = path;
+//       if (v != null) {
+//         setState(() {
+//           concluido = true;
+//         _path = prefs.setString(filename, pathaved).then((bool success) {
+//           return pathaved;
+//         });
 
-      Navigator.pop(context);
-      Navigator.push(context,MaterialPageRoute(builder: (context) => PaySucess(pathaved, widget.nome,widget.id,widget.capa,widget.preco,widget.titulo)));
+//       Navigator.pop(context);
+//       Navigator.push(context,MaterialPageRoute(builder: (context) => PaySucess(pathaved, widget.nome,widget.id,widget.capa,widget.preco,widget.titulo)));
 
-      });
-     }
-    });
-  }
+//       });
+//      }
+//     });
+//   }
 }

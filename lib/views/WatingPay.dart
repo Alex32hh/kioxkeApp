@@ -148,7 +148,7 @@ openBook(String src) async{
   }
 
 void deployProdutos() async{
-    final SharedPreferences prefs = await _prefs;
+   SharedPreferences prefs = await SharedPreferences.getInstance();
        final response = await http.post('https://www.visualfoot.com/api/cardSave.php',
     headers: <String, String>{
       'Content-Type': 'application/json; charset=UTF-8',
@@ -172,6 +172,7 @@ void deployProdutos() async{
     if(data.contains("sucess")){
       final getEmalSender = await http.get('http://manifexto.com/Kioxke_App/sendCartDetails.php?user_email=$email&user_price=${widget.preco.toString()}&book_title=${widget.titulo.toString()}&book_id=${widget.id.toString()}');
     }
+
 }
 
 }

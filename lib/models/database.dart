@@ -40,6 +40,7 @@ class DatabaseHelper{
       imageUrl TEXT NOT NULL,
       pathName TEXT NOT NULL,
       tipo INTEGER NOT NULL,
+      idcloud INTEGER NOT NULL,
       idident TEXT NOT NULL,
       $quantidade INTEGER NOT NULL
     ) '''
@@ -79,7 +80,12 @@ class DatabaseHelper{
   Future<int> deleteBook(String id) async{
        Database db = await instance.database;
        return await db.delete(tableName,where:'nome=?',whereArgs: [id]);
-   }
+  }
+
+ Future<int> deleteBookAny(String id,String dbName) async{
+       Database db = await instance.database;
+       return await db.delete(dbName,where:'nome=?',whereArgs: [id]);
+}
 
 
   

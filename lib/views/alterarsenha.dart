@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:http/http.dart';
 import 'package:kioxkenewf/models/viewStyles.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -30,8 +31,8 @@ class _EditSenhaState extends State<EditSenha> {
               inputlista("Nova Senha",true,senhaNova,Icons.security_outlined),
               inputlista("Confirmar Nova Senha",true,senhaNovaConfirm,Icons.lock_outlined),
               loginButton("Alterar Senha",Colors.green,Colors.white,() async{
-                final SharedPreferences prefs = await _prefs;
-                updateSenha(senhaAntiga.text,senhaNova.text,senhaNovaConfirm.text,prefs.getString("email"),context);
+              final SharedPreferences prefs = await _prefs;
+              updateSenha(senhaAntiga.text,senhaNova.text,senhaNovaConfirm.text,prefs.getString("email"),context);
                 // senhaAntiga.text = senhaNova.text = "";  
                }),
           ]
@@ -83,9 +84,10 @@ class _EditSenhaState extends State<EditSenha> {
     ),
   )
   );
-
 }
+
   updateSenha(String senhaAntigaTmp,String senhaNovaTmp,String senhaNovaConfir,String email,BuildContext context) async {
+
       if(senhaNovaConfir != senhaNovaTmp){
         showConfirm(context,"Pedido de alteracao de senha.","As Senhas Não sao Iguais!");
         return;
@@ -106,6 +108,7 @@ class _EditSenhaState extends State<EditSenha> {
       }
 
     }
+
 }
 
   
