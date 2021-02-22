@@ -1,14 +1,15 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:math';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart';
 import 'package:kioxkenewf/models/database.dart';
+import 'package:kioxkenewf/util/const.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'offinedabase.dart';
 import 'package:http/http.dart' as http;
-final storage = new FlutterSecureStorage();
-
 
 saveList(String id,String nome,String descricao,String preco,String imageUrl,String fileSrc,String pathName,String idident,int tipo) async {
    
@@ -190,15 +191,71 @@ void cardDeliteItems(String id) async{
 getdataSave(String url,String keyPath) async{
     final response = await http.get(url);
     if (response.statusCode == 200) {
-      String datail = await storage.read(key:keyPath);
-      if(json.decode(datail)  == json.decode(response.body))
-      await storage.write(key: keyPath, value: response.body);
+      String datail = "";
+      readContent(keyPath).then((value){
+        datail = value;
+      });
+
+      if(datail.isEmpty || json.decode(datail) == json.decode(response.body)){
+         writeContent(keyPath,(response.body));
+      }
       return 1;
     } else {
-      return 0;
-      // throw Exception('Failed to load photos');
+      // return 0;
+      throw Exception('Failed to load photos');
     }
 }
+
+
+ Future<String> get _localPath async {
+    Directory appDocDir = Platform.isAndroid?await getExternalStorageDirectory():await getApplicationDocumentsDirectory();
+
+    if (Platform.isAndroid) {
+      Directory(appDocDir.path.split('Android')[0] + '${Constants.appName}').createSync();
+    }
+    return appDocDir.path;
+}
+
+ Future<File> _localFile(String key) async {
+    final path = await _localPath;
+    return File('$path/$key');
+ }
+
+Future<File> writeContent(String key,String content) async {
+    // PermissionStatus permission = await PermissionHandler().checkPermissionStatus(PermissionGroup.storage);
+    // if (permission != PermissionStatus.granted) {
+    //  await PermissionHandler().requestPermissions([PermissionGroup.storage]);
+    //    File file = await _localFile(key);
+    //    // Write the file
+    //    return file.writeAsString(content);        
+    //   }
+      File file = await _localFile(key);
+      print(file.path);
+       // Write the file
+      return file.writeAsString(content);   
+}
+
+
+Future<String> readContent(String key) async {
+    try {
+      File file = await _localFile(key);
+      // Read the file
+      String contents = await file.readAsString();
+      // Returning the contents of the file
+      return contents;
+    } catch (e) {
+      // If encountering an error, return
+      return 'Error!';
+    }
+  }
+
+
+
+
+
+
+
+
 
 
 

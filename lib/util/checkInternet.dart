@@ -15,8 +15,10 @@ class checkInternet{
       case DataConnectionStatus.connected:
         var intervalo = "Conectado a internet";
         var contentm = "Conectado a internet";
-        if(InternetStatus != "Unknown")
-        _showDialogConected(intervalo,contentm,context);
+        if(InternetStatus != "Unknown"){
+          Navigator.pop(context);
+         _showDialogConected(intervalo,contentm,context);
+        }
         break;
       case DataConnectionStatus.disconnected:
         InternetStatus = "Você está desconectado da Internet";

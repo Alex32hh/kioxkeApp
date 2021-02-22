@@ -6,7 +6,6 @@ import 'package:badges/badges.dart';
 import 'package:data_connection_checker/data_connection_checker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_icons/flutter_icons.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:kioxkenewf/components/Endrawer.dart';
 import 'package:kioxkenewf/components/drawer.dart';
 import 'package:http/http.dart' as http;
@@ -32,8 +31,6 @@ class _HomeViewState extends State<HomeView> {
 
   final TextEditingController _filter = new TextEditingController();
 
-
-  final storage = new FlutterSecureStorage();
   final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey = new GlobalKey<RefreshIndicatorState>();
   Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
   final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
@@ -313,11 +310,16 @@ Future<void>  _refresh() async{
 }
 
 void getFiles() async{
-  String datall = await storage.read(key:"dataAll");
-  list =json.decode(datall)  as List;
 
-  String dataPopulares = await storage.read(key:"populares");
-  destaques =json.decode(dataPopulares)  as List;
+  readContent("dataAll.spv").then((value){
+      list = json.decode(value) as List;
+  });
+ 
+  readContent("populares.spv").then((value){
+    destaques =  json.decode(value)  as List;
+  });
+ 
+ 
 }
 
 

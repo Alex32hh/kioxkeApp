@@ -12,7 +12,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:io';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 void main (){
   runApp(
@@ -32,7 +31,7 @@ class Main extends StatefulWidget {
 
 
 class _MainState extends State<Main> {
-  final storage = new FlutterSecureStorage();
+
   Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
   Future<String> _email,_nome;
   List list = new List();
@@ -54,8 +53,8 @@ class _MainState extends State<Main> {
     //final int counter = (prefs.getInt('counter') ?? 0) + 1;
       if(prefs.getString("email") != null){
          print(prefs.getString("email")+prefs.getString("nome"));
-        int value =  await getdataSave("https://www.visualfoot.com/api/?catType=Livros","dataAll");
-        int value2 = await getdataSave("https://www.visualfoot.com/api/acessos.php?tipo=populares","populares");
+        int value =  await getdataSave("https://www.visualfoot.com/api/?catType=Livros","dataAll.spv");
+        int value2 = await getdataSave("https://www.visualfoot.com/api/acessos.php?tipo=populares","populares.spv");
         idConection= value+value2;
         print("Conection timer "+idConection.toString());
          if(idConection >= 2)
@@ -63,8 +62,8 @@ class _MainState extends State<Main> {
          else
            Navigator.pushAndRemoveUntil(context,MaterialPageRoute(builder: (context) =>  Biblioteca()),(Route<dynamic> route) => false);
       }else{
-        await getdataSave("https://www.visualfoot.com/api/?catType=Livros","dataAll");
-        await getdataSave("https://www.visualfoot.com/api/acessos.php?tipo=populares","populares");
+        await getdataSave("https://www.visualfoot.com/api/?catType=Livros","dataAll.spv");
+        await getdataSave("https://www.visualfoot.com/api/acessos.php?tipo=populares","populares.spv");
         startTimeout();
       }
   }

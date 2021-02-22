@@ -138,7 +138,7 @@ Widget produts(Function action,int counter,String imageUrl,String titulo,String 
           children: [ 
             Text('Encomenda Nº:$id $estado'),
             Text('${data.replaceAll('-',':')} - $hora'),
-            Text('Total: ${precoProduto.output.nonSymbol} kzs',style:TextStyle(fontSize:15,fontWeight: FontWeight.bold,color: primaryColor),),
+            estado != "2"?Text(('Total: ${precoProduto.output.nonSymbol} kzs'),style:TextStyle(fontSize:15,fontWeight: FontWeight.bold,color: primaryColor),):SizedBox(),
             estado == "0"?
              Row(
                mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -159,7 +159,7 @@ Widget produts(Function action,int counter,String imageUrl,String titulo,String 
                 ), Text("Concluido")
              ]
               ):estado == "2"?
-              Text("Concluido")
+              Text("Concluido",style:TextStyle(fontSize:15,fontWeight: FontWeight.bold,color: Colors.green))
               :SizedBox()
 
             ]),

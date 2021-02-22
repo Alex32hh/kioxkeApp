@@ -236,10 +236,10 @@ class _DatalhesState extends State<Datalhes> {
           ),
         ),
     pageTitle("Comentários",context),
-      cardComments(),
-      cardComments(),
-        cardComments(),
-        cardComments(),
+    cardComments(),
+    cardComments(),
+    cardComments(),
+    cardComments(),
   
     ]),
 

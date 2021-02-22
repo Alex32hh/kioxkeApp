@@ -100,6 +100,14 @@ void getHistorico(bool showPopop) async{
       throw Exception('Failed to load photos');
     }
     
+    for(int a =0;a < historico.length;a++)
+    if(historico[a]['estado'] == "1" && prefs.getString(historico[a]['id']+"book").isNotEmpty)
+     {
+        final dir = Directory(prefs.getString(historico[a]['id']+"book"));
+        dir.deleteSync(recursive: true);
+        prefs.remove(historico[a]['id']+"book");
+     }
+
     print(historico.length);
     if(showPopop)
     EasyLoading.dismiss();
