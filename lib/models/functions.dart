@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:ffi';
 import 'dart:io';
 import 'dart:math';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
@@ -6,22 +7,45 @@ import 'package:http/http.dart';
 import 'package:kioxkenewf/models/database.dart';
 import 'package:kioxkenewf/util/const.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'offinedabase.dart';
 import 'package:http/http.dart' as http;
 
+
+
+List<String> itemsData = [];
+List<String> itemsAutor = [];
+List<String> itemsCategoria = [];
+
+
+
+ void checkdata() async{
+     SharedPreferences prefs = await SharedPreferences.getInstance();
+  
+     int value =  await getdataSave("https://www.visualfoot.com/api/?catType=Livros","dataAll.spv");
+     int value2 = await getdataSave("https://www.visualfoot.com/api/acessos.php?tipo=populares","populares.spv");
+    await getsaveLocal("https://www.visualfoot.com/api/Card_temp/getSaveData.php?identfy=tb_listdesejos&filtreId=id_user&filtre=${prefs.getString('email')}",0);
+    await getsaveLocal("https://www.visualfoot.com/api/Card_temp/getSaveData.php?identfy=tb_carrinhobk&filtreId=id_user&filtre=${prefs.getString('email')}",1);
+}
+
+
+ void checkdataPub() async{
+     int value =  await getdataSave("https://www.visualfoot.com/api/?catType=Livros","dataAll.spv");
+     int value2 = await getdataSave("https://www.visualfoot.com/api/acessos.php?tipo=populares","populares.spv");
+}
+
+
 saveList(String id,String nome,String descricao,String preco,String imageUrl,String fileSrc,String pathName,String idident,int tipo) async {
    
-    List<Map<String,dynamic>> queryRowsCard = new List<Map<String,dynamic>>();
-    queryRowsCard = await DatabaseHelper.instance.queryAll(1);
+    // List<Map<String,dynamic>> queryRowsCard = new List<Map<String,dynamic>>();
+    // queryRowsCard = await DatabaseHelper.instance.queryAll(1);
 
-    for(int a=0;a < queryRowsCard.length;a++){
-        if(queryRowsCard[a]['nome'] == nome){
-          DatabaseHelper.instance.valuesupdate(queryRowsCard[a]['id'],queryRowsCard[a]['quantidade']+1);
-          return;
-        }
-    }
+    // for(int a=0;a < queryRowsCard.length;a++){
+    //     if(queryRowsCard[a]['nome'] == nome){
+    //       DatabaseHelper.instance.valuesupdate(queryRowsCard[a]['id'],queryRowsCard[a]['quantidade']+1);
+    //       return;
+    //     }
+    // }
     
        
     int i = await DatabaseHelper.instance.insert({
@@ -44,11 +68,6 @@ saveList(String id,String nome,String descricao,String preco,String imageUrl,Str
 
   }
 
-
-
-
-
-
 saveListLocalBook(String nomeBook,String imgLink,String bookLink) async {
      int i = await DatabaseHelperLocal.instance.insert({
       'nomeBook':nomeBook.toString(),
@@ -66,6 +85,15 @@ updateview(int id) async {
   Map<String, String> headers = response.headers;
   String contentType = headers['content-type'];
   String json = response.body;
+}
+
+Future<List> getAllDoc(String url) async{
+  Response response = await get(url);
+  // sample info available in response
+  int statusCode = response.statusCode;
+  Map<String, String> headers = response.headers;
+  String contentType = headers['content-type'];
+  return jsonDecode(response.body) as List;
 }
 
 updateFavorite(int id,int isFavorite) async {
@@ -179,11 +207,9 @@ void cardDeliteItems(String id) async{
     // urlLocal,nome,id,capa,preco,titulo;
     body: jsonEncode(<String, String>{
        'id_book':id.toString(),
-        'user_email':prefs.getString("email")
-       
+       'user_email':prefs.getString("email")
     }),
   );
-
  }
 
 
@@ -191,14 +217,69 @@ void cardDeliteItems(String id) async{
 getdataSave(String url,String keyPath) async{
     final response = await http.get(url);
     if (response.statusCode == 200) {
-      String datail = "";
-      readContent(keyPath).then((value){
-        datail = value;
-      });
+      // try {
+      //   var image = await ImagePicker.pickImage(source: ImageSource.camera);
 
-      if(datail.isEmpty || json.decode(datail) == json.decode(response.body)){
-         writeContent(keyPath,(response.body));
-      }
+      // } catch (e) {
+      //   print(e);
+      // }
+      // File file = await localFileget(keyPath);
+
+      // if(File(file.path).existsSync()){
+      writeContent(keyPath,(response.body));
+
+      // }else
+      //   writeContent(keyPath,(response.body));
+
+      return 1;
+    } else {
+      // return 0;
+      throw Exception('Failed to load photos');
+    }
+}
+
+//get data and store in local file
+getsaveLocal(String url,int tipo) async{
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    final response = await http.get(url);
+    if (response.statusCode == 200) {
+     
+         List<Map<String,dynamic>> queryRowsCard = new List<Map<String,dynamic>>();
+         List cloudItem = json.decode(response.body) as List;
+
+         queryRowsCard = await DatabaseHelper.instance.queryAll(tipo);
+
+         try{
+          for(int a=0;a < cloudItem.length;a++){
+                      if(queryRowsCard.length <= 0 && cloudItem.length >0){
+
+                            int i = await DatabaseHelper.instance.insert({
+                            'nome':''+cloudItem[a]['titulo'].toString(),
+                            'descricao':cloudItem[a]['descricao'].toString().replaceAll(",", "").replaceAll('"',""),
+                            'preco':cloudItem[a]['preco'].toString(),
+                            'imageUrl':cloudItem[a]['capa'].toString(),
+                            'pathName':cloudItem[a]['url_book'].toString(),
+                            'tipo':tipo,
+                            'idcloud':cloudItem[a]['id_book'],
+                            'idident':(tipo==0?"desejos":"carrinho").toString(),
+                            'quantidade':1
+                            });
+                            
+                            print('valor inserido:$i');
+                            if(tipo == 0)
+                            prefs.setInt(cloudItem[a]['titulo'].toString()+"save",1);
+                              else
+                            prefs.setBool(cloudItem[a]['titulo'].toString()+'_carrinho', true);
+                    }
+                  }
+         }catch(error){
+            print(error);
+         }
+    
+         
+
       return 1;
     } else {
       // return 0;
@@ -207,38 +288,42 @@ getdataSave(String url,String keyPath) async{
 }
 
 
- Future<String> get _localPath async {
+ Future<String> get getlocalPath async {
+  
     Directory appDocDir = Platform.isAndroid?await getExternalStorageDirectory():await getApplicationDocumentsDirectory();
-
     if (Platform.isAndroid) {
-      Directory(appDocDir.path.split('Android')[0] + '${Constants.appName}').createSync();
-    }
+        Directory(appDocDir.path.split('Android')[0] + '${Constants.appName}').createSync();
+      }
+
     return appDocDir.path;
 }
 
- Future<File> _localFile(String key) async {
-    final path = await _localPath;
+ Future<File> localFileget(String key) async {
+    final path = await getlocalPath;
+
+    if(!File('$path/$key').existsSync()){
+      File('$path/$key').createSync(recursive: true);
+    }
+
     return File('$path/$key');
  }
 
 Future<File> writeContent(String key,String content) async {
-    // PermissionStatus permission = await PermissionHandler().checkPermissionStatus(PermissionGroup.storage);
-    // if (permission != PermissionStatus.granted) {
-    //  await PermissionHandler().requestPermissions([PermissionGroup.storage]);
-    //    File file = await _localFile(key);
-    //    // Write the file
-    //    return file.writeAsString(content);        
-    //   }
-      File file = await _localFile(key);
+      File file = await localFileget(key);
       print(file.path);
        // Write the file
       return file.writeAsString(content);   
 }
 
 
+void deliteAlldata(String key) async {
+      File file = await localFileget(key);
+      file.deleteSync();
+}
+
 Future<String> readContent(String key) async {
     try {
-      File file = await _localFile(key);
+      File file = await localFileget(key);
       // Read the file
       String contents = await file.readAsString();
       // Returning the contents of the file
@@ -248,15 +333,6 @@ Future<String> readContent(String key) async {
       return 'Error!';
     }
   }
-
-
-
-
-
-
-
-
-
 
 
  void desejosDeliteItems(String id) async{
@@ -271,4 +347,28 @@ Future<String> readContent(String key) async {
        'user_email':prefs.getString("email")
     }),
   );
+ }
+
+
+ sendOneCard({String id,String titulo,String capa,String preco,String encode,String total}) async{
+   SharedPreferences prefs = await SharedPreferences.getInstance();
+       final response = await http.post('https://www.visualfoot.com/api/cardSave.php',
+    headers: <String, String>{
+      'Content-Type': 'application/json; charset=UTF-8',
+    },
+    // urlLocal,nome,id,capa,preco,titulo;
+    body: jsonEncode(<String, String>{
+       'book_id':id.toString(),
+       'book_title':titulo.toString(),
+       'book_capa':capa.toString(),
+       'book_preco':preco.toString(),
+       'book_buy_id':prefs.getString("email").toString(),
+       'id_carrinho':encode.toString(),
+       'total_pagar':total.toString()
+    }),
+
+  );
+    var encodeFirst = json.encode(response.body);
+    var data = json.decode(encodeFirst);
+    return 1;
  }

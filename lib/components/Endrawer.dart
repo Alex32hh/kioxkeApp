@@ -1,22 +1,26 @@
 import 'package:badges/badges.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_icons/flutter_icons.dart';
+import 'package:kioxkenewf/util/bookModel.dart';
 import 'package:kioxkenewf/views/Cardcompras.dart';
 import 'package:kioxkenewf/views/biblioteca/biblioteca.dart';
 import 'package:kioxkenewf/views/biblioteca/historicoCompra.dart';
 import 'package:kioxkenewf/views/desejosLista.dart';
+import 'package:provider/provider.dart';
 
 
 class EndDrawerPage extends StatelessWidget {
     
-    final String nomeUser,cartTotalProduts,listadesejosCount;
-    EndDrawerPage(this.nomeUser,this.cartTotalProduts,this.listadesejosCount);
+    final String nomeUser,cartTotalProduts;
+    EndDrawerPage(this.nomeUser,this.cartTotalProduts);
 
 
   @override
   Widget build(BuildContext context) {
     return Drawer(
-      child: Column(
+      child:Consumer<BooksModel>(
+      builder: (context, cart, child) {
+     return Column(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
           Container(
@@ -26,7 +30,7 @@ class EndDrawerPage extends StatelessWidget {
             decoration: BoxDecoration(
               image: DecorationImage(image: AssetImage("images/pattner.jpg"),fit:BoxFit.cover)
             ),
-            child: FlatButton(onPressed: (){
+            child: TextButton(onPressed: (){
                Navigator.pop(context);
                Navigator.push(context,MaterialPageRoute(builder: (context) => CardCompras()));   
             }, child:Column(
@@ -36,7 +40,7 @@ class EndDrawerPage extends StatelessWidget {
                 Badge(
                   position: BadgePosition.topEnd(),
                   badgeColor:Colors.red,
-                  badgeContent: Text((cartTotalProduts).toString(),style: TextStyle(color: Colors.white),),
+                  badgeContent: Text(cart.docCart.length.toString(),style: TextStyle(color: Colors.white),),
                   child: Icon(Icons.shopping_cart,size: 80, color: Colors.white,),
                   ),
                
@@ -51,7 +55,7 @@ class EndDrawerPage extends StatelessWidget {
 
           ),
           
-         listItem("Lista de Desejos",Feather.flag,int.parse(listadesejosCount),(){
+         listItem("Lista de Desejos",Feather.flag,cart.docs.length,(){
              Navigator.pop(context);
             Navigator.push(context,MaterialPageRoute(builder: (context) => WishlistWidget()));
          }),
@@ -66,9 +70,8 @@ class EndDrawerPage extends StatelessWidget {
          }),
         ],
 
-      ),
-
-    );
+      );},
+    ));
   }
 
   Widget listItem(String titulo,IconData iconPrefix,int valueCont,Function submit){

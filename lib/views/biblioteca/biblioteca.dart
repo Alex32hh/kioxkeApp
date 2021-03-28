@@ -5,7 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_icons/flutter_icons.dart';
 import 'package:kioxkenewf/models/offinedabase.dart';
 import 'package:kioxkenewf/models/viewStyles.dart';
-
+import 'package:kioxkenewf/views/biblioteca/pdfViewer.dart';
+import 'package:kioxkenewf/views/home.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:path/path.dart' as p;
 
 class Biblioteca extends StatefulWidget {
   @override
@@ -15,8 +18,10 @@ class Biblioteca extends StatefulWidget {
 class _BibliotecaState extends State<Biblioteca> {
 
     List<Map<String,dynamic>> queryRowsCard = new List<Map<String,dynamic>>();
+      final TextEditingController _filter = new TextEditingController();
+
    @override
-  void initState() {
+  void initState(){
     super.initState();
     loadLocalBook();
   }
@@ -29,22 +34,112 @@ class _BibliotecaState extends State<Biblioteca> {
         centerTitle: true,
         elevation: 0.0,
         backgroundColor: primaryColor,
-       title: Text("Biblioteca"),
+       title: Text("Minha Biblioteca"),
        actions: [
-         IconButton(icon: Icon(Feather.home), onPressed: (){
-           
+         IconButton(icon: Icon(Feather.home), onPressed: () async{
+             SharedPreferences prefs = await SharedPreferences.getInstance();
+             Navigator.pushAndRemoveUntil(context,MaterialPageRoute(builder: (context) =>  HomeView(prefs.getString("nome").replaceAll('"', ""),prefs.getString("email").replaceAll('"', ""))),(Route<dynamic> route) => false);
          })
        ],
       ),
-      body: queryRowsCard.length == 0? emptyWid():Container(
-        child: GridView.count(
-        crossAxisCount: 2 ,
-        children: List.generate(queryRowsCard.length,(index){
-          return boxBook(queryRowsCard[index]['imgLink'],queryRowsCard[index]['bookLink']);
+      body: queryRowsCard.length == 0? emptyWid():
+       SingleChildScrollView(
+         child:Column(
+        crossAxisAlignment:CrossAxisAlignment.start ,
+        children:[
+           Padding(padding: EdgeInsets.all(10),
+            child:TextField(
+                controller:_filter,
+                textInputAction: TextInputAction.go,
+                onSubmitted: (value) {
+                    print("search");
+                },
+                textAlign: TextAlign.left,
+                textAlignVertical: TextAlignVertical.center,
+                maxLines: 1,
+                style: TextStyle(
+                  fontSize: 13,
+                ),
+                cursorColor: primaryColor,
+                decoration: InputDecoration(
+                  prefixIcon: _filter.value.text.length > 0?IconButton(icon: Icon(Icons.close, color: primaryColor,), onPressed: (){
+                    _filter.clear();
+                    // _filter.dispose();
+                  }):null,
+                  alignLabelWithHint: false,
+                  hintText: "O que Procura?",
+                  hintStyle: TextStyle(
+                    fontSize: 15
+                  ),
+                    filled: true,
+                    fillColor: Colors.grey[200],
+                    // prefix: IconButton(icon: Icon(Icons.close_rounded, color: primaryColor,), onPressed: (){}),
+                    suffixIcon: _filter.value.text.length > 0?IconButton(icon: Icon(Icons.dashboard_outlined, color: primaryColor,), onPressed: (){
+             
+                    }):null,
+                        border: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        errorBorder: InputBorder.none,
+                        disabledBorder: InputBorder.none,
+                        contentPadding:
+                        EdgeInsets.only(left: 15, bottom: 16, top: 11, right: 15),
+                    ),
+              )
+              
+              ),
+
+
+       Container(
+         padding: EdgeInsets.all(10),
+          child:Text("A Ler",style: subtitle,),
+       ),
+
+        Container(
+          height: 240,
+          child:Container(
+          // height:  MediaQuery.of(context).size.height,
+          child: ListView.builder(
+               scrollDirection: Axis.horizontal,
+                itemCount: queryRowsCard.length,
+                itemBuilder: (BuildContext context, int index) {
+            return biblotecaitem((){
+                openBookall(queryRowsCard[index]['bookLink']);
+            },queryRowsCard[index]['nomeBook'],queryRowsCard[index]['imgLink']);
+          
         }),
-      ),
-      ),
-    );
+      )),
+
+
+       Container(
+         padding: EdgeInsets.all(10),
+          child:Text("Lidos",style: subtitle,),
+       ),
+
+        Container(
+          height: 240,
+          child:Container(
+          // height:  MediaQuery.of(context).size.height,
+          child: ListView.builder(
+               scrollDirection: Axis.horizontal,
+                itemCount: queryRowsCard.length,
+                itemBuilder: (BuildContext context, int index) {
+            return biblotecaitem((){
+                final xtension = p.extension(queryRowsCard[index]['bookLink']);
+
+                if(xtension.toLowerCase().contains(("epub").toLowerCase()))
+                  openBookall(queryRowsCard[index]['bookLink']);
+                else if(xtension.toLowerCase().contains(("pdf").toLowerCase()))
+                   Navigator.push(context,MaterialPageRoute(builder: (context) =>  OpenAnotherBook(pathUrl:queryRowsCard[index]['bookLink'],nameBook:queryRowsCard[index]['nomeBook'])));
+
+            },queryRowsCard[index]['nomeBook'],queryRowsCard[index]['imgLink']);
+          
+        }),
+      )),
+
+        ]
+      )
+    ));
   }
 
   Widget emptyWid(){
@@ -129,10 +224,9 @@ class _BibliotecaState extends State<Biblioteca> {
 
                 }
                ),
-             child: FlatButton(onPressed: (){
+             child: TextButton(onPressed: (){
                openBookall(linkPath);
              },
-             color:Colors.white, 
              child: Text("Ler")),
             )
       )
@@ -154,7 +248,7 @@ class _BibliotecaState extends State<Biblioteca> {
                 themeColor: Theme.of(context).accentColor,
                 scrollDirection: EpubScrollDirection.HORIZONTAL,
                 enableTts: false,
-                allowSharing: true,
+                allowSharing: false,
               );
 
             EpubViewer.open(
@@ -170,7 +264,6 @@ class _BibliotecaState extends State<Biblioteca> {
     }
 
   }
-
 
 
 }

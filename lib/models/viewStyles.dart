@@ -1,14 +1,13 @@
-import 'dart:convert';
 
-import 'package:animations/animations.dart';
 import 'package:badges/badges.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_icons/flutter_icons.dart';
+
 import 'package:flutter_money_formatter/flutter_money_formatter.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:im_stepper/stepper.dart';
 import 'package:kioxkenewf/models/functions.dart';
-import 'package:kioxkenewf/views/detalhes.dart';
+import 'package:percent_indicator/circular_percent_indicator.dart';
 
 const TextStyle optionStyle = TextStyle(fontSize: 15, fontWeight: FontWeight.bold);
 const TextStyle profileStyle = TextStyle(fontSize: 19, fontWeight: FontWeight.bold);
@@ -37,7 +36,6 @@ Widget shimerVertical(BuildContext context){
     );
 }
 
-
 Widget pageTitle (String title,BuildContext context){
    return Container(
       width: MediaQuery.of(context).size.width,
@@ -47,7 +45,6 @@ Widget pageTitle (String title,BuildContext context){
       child: Text(title,style: optionStyle,),
    );
  }
-
 
 Widget cardComments(){
   return Card(
@@ -78,14 +75,25 @@ Widget cardComments(){
     );
 }
 
-
-Widget cardItem(String titulo,String imag,String preco){
+Widget cardItem(String titulo,String imag,String preco,{Function download,int estado,double progress}){
    FlutterMoneyFormatter precoProduto = FlutterMoneyFormatter(amount: double.parse(preco));
   return Card(
       child:CachedNetworkImage(
         imageUrl: imag,
         imageBuilder: (context, imageProvider) => ListTile(
         contentPadding: EdgeInsets.all(5),
+        trailing: estado <= 0?
+        IconButton(icon: Icon(Icons.cloud_download_outlined,size:30,color:estado <= 0?Colors.grey:Colors.green), onPressed:() async{if(estado > 0)download();}):
+        CircularPercentIndicator(
+                radius: 35.0,
+                lineWidth: 4.0,
+                animation: false,
+                percent: progress,
+                center: IconButton(icon:Icon(Icons.stop,size: 20,color: Colors.grey,), onPressed:(){if(estado > 0)download();}),
+                circularStrokeCap: CircularStrokeCap.round,
+                progressColor: primaryColor,
+              )
+        ,
         leading: Container(
           height: 60,
           width: 100,
@@ -107,62 +115,75 @@ Widget cardItem(String titulo,String imag,String preco){
     );
 }
 
-Widget produts(Function action,int counter,String imageUrl,String titulo,String preco,int id,String data,String hora,String estado,Function update,Function download){
+
+Widget produts(Function action,int counter,String imageUrl,String titulo,String preco,int id,String data,String hora,String estado,Function update,Function download,{String idCarrinho}){
   FlutterMoneyFormatter precoProduto = FlutterMoneyFormatter(amount: double.parse(preco));
   return Container(
-    height: estado == "2"?100:140,
+    height: estado == "2"?120:140,
     child: Card(
       child:CachedNetworkImage(
         imageUrl: imageUrl,
         imageBuilder: (context, imageProvider) => ListTile(
         contentPadding: EdgeInsets.all(5),
         dense:false,
-        leading: Container(
-          width: 100,
-          height: 200,
-          decoration: BoxDecoration(
-          image: DecorationImage(
-              image: imageProvider,
-              fit: BoxFit.cover,
-             ),
-          ),
-        ),
+       
         title:RichText(
               overflow: TextOverflow.ellipsis,
               text: TextSpan(
                   style:subtitle,
-                  text:'$titulo'),
+                  text:'Encomenda Nº:$id'),
                   ),
         subtitle:Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [ 
-            Text('Encomenda Nº:$id $estado'),
             Text('${data.replaceAll('-',':')} - $hora'),
             estado != "2"?Text(('Total: ${precoProduto.output.nonSymbol} kzs'),style:TextStyle(fontSize:15,fontWeight: FontWeight.bold,color: primaryColor),):SizedBox(),
-            estado == "0"?
              Row(
-               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                 FlatButton(
-                    onPressed: () async{showNormalAlert(context,(){deletaCarrinho(id.toString());update();},"Aviso","Tem certeza que deseja desistir da compra?");}, 
+                  estado == "0"? FlatButton(
+                    onPressed: () async{showNormalAlert(context,(){deletaCarrinho(idCarrinho);update();},"Aviso","Tem certeza que deseja desistir da compra?");}, 
                     color:primaryColor,
                     child: Text("Cancelar")
-                 ), Text("Pendente")
-              ]
-              ):estado == "1"?
-              Row(
-               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                FlatButton(onPressed: (){download();update();}, 
-                  color: Colors.green,
-                  child: Text("Transferir",style: TextStyle(color:Colors.white)),
-                ), Text("Concluido")
-             ]
-              ):estado == "2"?
-              Text("Concluido",style:TextStyle(fontSize:15,fontWeight: FontWeight.bold,color: Colors.green))
-              :SizedBox()
+                 ):FlatButton(
+                    onPressed: action,
+                    color:Colors.green,
+                    child: Text("Pago")
+                 ),
+                Expanded(
+                  child:IconStepper(
+                     alignment:Alignment.centerRight,
+                    lineColor:primaryColor,
+                    activeStepBorderPadding:2.0,
+                    enableStepTapping:false,
+                    stepRadius:17.0,
+                    lineLength:48.0,
+                    enableNextPreviousButtons:false,
+                    // scrollingDisabled:false,
+                icons: [
+                  Icon(Icons.access_time_rounded),
+                  Icon(Icons.assignment_turned_in),
+                  Icon(Icons.archive),
+                ],
 
-            ]),
+                // activeStep property set to activeStep variable defined above.
+                activeStep: int.parse(estado),
+
+                // This ensures step-tapping updates the activeStep. 
+                onStepReached: (index) {
+                  // setState(() {
+                  //   activeStep = index;
+                  // });
+                },
+              ),
+                )
+
+                //  Text("Pendente")
+              ]
+              )
+
+            ]
+          ),
         trailing: Column(
           children: [
             // Icon(Icons.arrow_drop_down),
@@ -171,19 +192,7 @@ Widget produts(Function action,int counter,String imageUrl,String titulo,String 
                   badgeColor:Colors.red,
                   badgeContent: Text((counter).toString(),style: TextStyle(color: Colors.white, fontSize: 9),),
                   child: Icon(Icons.arrow_drop_down,color: Colors.grey)
-                  ),
-               
-            Container(
-              alignment: Alignment.topCenter,
-              padding: EdgeInsets.all(10),
-              width: 30,
-              height: 30,
-              child: estado == "2"? Icon(Icons.check_circle,color:Colors.green, size: 20,):
-               CircularProgressIndicator(
-                strokeWidth:5
-              )
-            ),
-           
+                ),
           ],
         ),
         isThreeLine: true,
@@ -194,7 +203,6 @@ Widget produts(Function action,int counter,String imageUrl,String titulo,String 
     )
   );
 }
-
 
 Widget horizontalBox(Function openAction,BuildContext context,String titulo,String imageUrl,String autor,String likes,String urlBook,String preco,String descricao,String id,int isFavorite){
   FlutterMoneyFormatter precoProduto = FlutterMoneyFormatter(amount: double.parse(preco));
@@ -338,6 +346,63 @@ Widget verticalBox(Function openAction, BuildContext context,String titulo,Strin
  );
 }
 
+
+Widget biblotecaitem(Function openAction,String titulo,String imageUrl){
+  return  InkWell(
+    onTap:(){
+      openAction();
+    },
+    child:Container(
+     width: 150,
+     height: 250,
+     padding: EdgeInsets.all(5),
+      child: CachedNetworkImage(
+      imageUrl: "$imageUrl",
+     imageBuilder: (context, imageProvider) => 
+       Container(
+        width: 200,
+        decoration: BoxDecoration(
+          color:Colors.grey[200],
+          borderRadius: BorderRadius.all(Radius.circular(15))
+        ),
+        child:Column(
+          mainAxisSize: MainAxisSize.max,
+         children: [
+            Container(
+              width: 200,
+              height: 200,
+             decoration: BoxDecoration(
+               borderRadius: BorderRadius.all(Radius.circular(10)),
+                image: DecorationImage(
+                    image: imageProvider,
+                    fit: BoxFit.cover,
+                  ),
+              ),),
+               Expanded(
+                child:Container(
+                  alignment: Alignment.center,
+                  padding: EdgeInsets.all(5),
+                  child: RichText(
+                    overflow: TextOverflow.ellipsis,
+                    text: TextSpan(
+                        style: TextStyle(color: Colors.grey[700],fontSize: 12,fontWeight: FontWeight.bold),
+                        text: "$titulo"),
+                  ),
+                ),
+              ),
+
+
+         ],
+        ),
+      ),
+     placeholder: (context, url) => shimerVertical(context),
+     errorWidget: (context, url, error) => Icon(Icons.error),
+   ),
+  )
+ );
+}
+
+
 showAlertDialog(BuildContext context,Function callBack) {
   // set up the buttons
   Widget cancelButton = FlatButton(
@@ -372,7 +437,6 @@ showAlertDialog(BuildContext context,Function callBack) {
     },
   );
 }
-
 
 showNormalAlert(BuildContext context,Function callBack,String title,String body) {
   // set up the buttons
@@ -409,10 +473,9 @@ showNormalAlert(BuildContext context,Function callBack,String title,String body)
   );
 }
 
-
 showConfirm(BuildContext context,String title,String body) {
   // set up the buttons
-  Widget continueButton = FlatButton(
+Widget continueButton = FlatButton(
     child: Text("Ok"),
     onPressed: (){
       Navigator.pop(context);

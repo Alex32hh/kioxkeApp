@@ -14,15 +14,17 @@ import 'package:shared_preferences/shared_preferences.dart';
 class Historico extends StatefulWidget {
   @override
   _HistoricoState createState() => _HistoricoState();
+
+  final isVerified;
+  Historico({this.isVerified});
+
 }
 
 class _HistoricoState extends State<Historico> {
 
   List historico = new List();
 
-  String fileSystem ="";
-  Future<String> _path;
-
+  bool singletime = true;
     @override
   void initState() {
     super.initState();
@@ -42,7 +44,7 @@ class _HistoricoState extends State<Historico> {
         elevation: 0.0,
         backgroundColor: primaryColor,
         centerTitle: true,
-       title: Text("Historico de Compras"),
+       title: Text("Histórico de Compras"),
         actions: [
           
         ]
@@ -65,10 +67,12 @@ class _HistoricoState extends State<Historico> {
                     openElevation:0.0,
                     closedElevation: 0.0,
                     closedBuilder: (context,action){
-                      return produts(action,int.parse(historico[index]['count']),historico[index]['capa'],historico[index]['titulo'],historico[index]['total_pagar'],int.parse(historico[index]['id']),historico[index]['data'],historico[index]['hora'],historico[index]['estado'],() async{getHistorico(true);},(){startDownloadFile(historico[index]['url'],historico[index]['id_book']+"book",historico[index]['titulo'],historico[index]['capa']); });
+                      return produts(action,int.parse(historico[index]['count']),historico[index]['capa'],historico[index]['titulo'],historico[index]['total_pagar'],int.parse(historico[index]['id']),historico[index]['data'],historico[index]['hora'],historico[index]['estado'],() async{getHistorico(true);},(){
+                      
+                        },idCarrinho:historico[index]['id_carrinho']);
                     }, 
                     openBuilder: (context,action){
-                       return Cardeails(action,historico[index]['id_carrinho']);
+                       return Cardeails(action,historico[index]['id_carrinho'],quantidade:int.parse(historico[index]['count']), totalPagar:int.parse(historico[index]['total_pagar']),data:historico[index]['data'].toString(),hora:historico[index]['hora'].toString(),numEcomenda:int.parse(historico[index]['id']),dataCompra:historico[index]['data_pagamento'].toString(),formaPagamento:historico[index]['forma_pagamento'].toString(),estadoDacompra:int.parse(historico[index]['estado']));
                     }
                     
                     );
@@ -91,6 +95,7 @@ Future<void>  _refresh() async{
 void getHistorico(bool showPopop) async{
     if(showPopop)
      EasyLoading.show(status: 'Aguarde');
+
      SharedPreferences prefs = await SharedPreferences.getInstance();
      final dataget = await http.get("https://www.visualfoot.com/api/historico/getBoxGoups.php?email=${prefs.getString("email")}");
     if (dataget.statusCode == 200) {
@@ -100,68 +105,34 @@ void getHistorico(bool showPopop) async{
       throw Exception('Failed to load photos');
     }
     
-    for(int a =0;a < historico.length;a++)
-    if(historico[a]['estado'] == "1" && prefs.getString(historico[a]['id']+"book").isNotEmpty)
+    for(int a =0;a < historico.length;a++){
+    if(int.parse(historico[a]['estado'])== 0)
      {
+        EasyLoading.dismiss();
+        if(prefs.getString(historico[a]['id']+"book") != null){
+        print(prefs.getString(historico[a]['id']+"book")+"<<<<");
+
         final dir = Directory(prefs.getString(historico[a]['id']+"book"));
-        dir.deleteSync(recursive: true);
+        dir.deleteSync(recursive: false);
+       
         prefs.remove(historico[a]['id']+"book");
+       }
+
      }
 
-    print(historico.length);
+    }
+
     if(showPopop)
     EasyLoading.dismiss();
+
+    if(widget.isVerified == true && singletime == true){
+        singletime = false;
+        showConfirm(context,"Sucesso!","A encomenda foi processada com sucesso e um email foi enviado com os dados da encomenda. \nCaso pagamento por IBAN - queira porfavor efectuar o pagamento.");
+    }
     getHistorico(false);
+
 }
 
-
-void startDownloadFile(String url, String filename, String bookName,String capa) async {
-    Directory appDocDir = Platform.isAndroid
-        ? await getExternalStorageDirectory()
-        : await getApplicationDocumentsDirectory();
-
-    if (Platform.isAndroid) {
-      Directory(appDocDir.path.split('Android')[0] + '${Constants.appName}').createSync();
-    }
-
-    String path = Platform.isIOS
-        ? appDocDir.path + '/$filename.epub'
-        : appDocDir.path.split('Android')[0] +
-            '${Constants.appName}/$filename.epub';
-
-    print(path);
-    File file = File(path);
-    if (!await file.exists()) {
-      await file.create();
-      
-    } else {
-      await file.delete();
-      await file.create();
-    }
-
-    showDialog(
-      barrierDismissible: false,
-      context: context,
-      builder: (context) => DownloadAlert(
-        url: url,
-        path: path,
-        bookname: bookName,
-        imageUrl: capa
-      ),
-    ).then((v) async {
-     SharedPreferences prefs = await SharedPreferences.getInstance();
-     final String pathaved = path;
-     fileSystem =  path;
-      if (v != null) {
-
-        setState(() {
-       _path = prefs.setString(filename, pathaved).then((bool success) {
-        return pathaved;
-        });
-      });
-     }
-    });
-  }
 
 
 }

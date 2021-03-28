@@ -1,4 +1,6 @@
 PODS:
+  - advance_pdf_viewer (1.0.5):
+    - Flutter
   - AEXML (4.6.0)
   - epub_viewer (0.0.1):
     - EpubViewerKit (~> 0.1.2)
@@ -10,8 +12,6 @@ PODS:
     - RealmSwift (= 5.4.8)
     - SSZipArchive (= 2.2.3)
     - ZFDragableModalTransition (= 0.6)
-  - esys_flutter_share (0.0.1):
-    - Flutter
   - Flutter (1.0.0)
   - flutter_money_formatter (0.0.1):
     - Flutter
@@ -21,8 +21,6 @@ PODS:
   - FontBlaster (5.1.1)
   - MenuItemKit (4.0.1)
   - path_provider (0.0.1):
-    - Flutter
-  - "permission_handler (4.4.0+hotfix.4)":
     - Flutter
   - Realm (5.4.8):
     - Realm/Headers (= 5.4.8)
@@ -38,12 +36,11 @@ PODS:
   - ZFDragableModalTransition (0.6)
 
 DEPENDENCIES:
+  - advance_pdf_viewer (from `.symlinks/plugins/advance_pdf_viewer/ios`)
   - epub_viewer (from `.symlinks/plugins/epub_viewer/ios`)
-  - esys_flutter_share (from `.symlinks/plugins/esys_flutter_share/ios`)
   - Flutter (from `Flutter`)
   - flutter_money_formatter (from `.symlinks/plugins/flutter_money_formatter/ios`)
   - path_provider (from `.symlinks/plugins/path_provider/ios`)
-  - permission_handler (from `.symlinks/plugins/permission_handler/ios`)
   - shared_preferences (from `.symlinks/plugins/shared_preferences/ios`)
   - sqflite (from `.symlinks/plugins/sqflite/ios`)
 
@@ -60,35 +57,32 @@ SPEC REPOS:
     - ZFDragableModalTransition
 
 EXTERNAL SOURCES:
+  advance_pdf_viewer:
+    :path: ".symlinks/plugins/advance_pdf_viewer/ios"
   epub_viewer:
     :path: ".symlinks/plugins/epub_viewer/ios"
-  esys_flutter_share:
-    :path: ".symlinks/plugins/esys_flutter_share/ios"
   Flutter:
     :path: Flutter
   flutter_money_formatter:
     :path: ".symlinks/plugins/flutter_money_formatter/ios"
   path_provider:
     :path: ".symlinks/plugins/path_provider/ios"
-  permission_handler:
-    :path: ".symlinks/plugins/permission_handler/ios"
   shared_preferences:
     :path: ".symlinks/plugins/shared_preferences/ios"
   sqflite:
     :path: ".symlinks/plugins/sqflite/ios"
 
 SPEC CHECKSUMS:
+  advance_pdf_viewer: 5c832f382b4ca84fe735f893b7e91aa830c27d7b
   AEXML: 2fbb73d8724797ed2cde888731e176fa4d44dd83
   epub_viewer: 46bb3de7348b95aa1f50bd229dbb3cb50dc280cf
   EpubViewerKit: b1c5b8a3d20a3af7bb5398671b15f5a7dcef54e0
-  esys_flutter_share: 403498dab005b36ce1f8d7aff377e81f0621b0b4
-  Flutter: 0e3d915762c693b495b44d77113d4970485de6ec
+  Flutter: 434fef37c0980e73bb6479ef766c45957d4b510c
   flutter_money_formatter: d0d18ddc5be333fad8d09964d741b59fa11a91dc
   FMDB: 2ce00b547f966261cd18927a3ddb07cb6f3db82a
   FontBlaster: 8897ebdbb4b6ace3ab78c92b665d88c954f19e4a
   MenuItemKit: 1459920e984d823e1bcc858b7a964f94e6bfa0f6
   path_provider: abfe2b5c733d04e238b0d8691db0cfd63a27a93c
-  permission_handler: 8278954f2382902f63f00dd8828769c0bd6d511b
   Realm: 042bbb59227a0159eda397b8a5a49fbd67495ce7
   RealmSwift: 15ddd6b3398ebfc99810811c44f095df1313adb3
   shared_preferences: af6bfa751691cdc24be3045c43ec037377ada40d
@@ -96,6 +90,6 @@ SPEC CHECKSUMS:
   SSZipArchive: 62d4947b08730e4cda640473b0066d209ff033c9
   ZFDragableModalTransition: 0d294eaaba6edfcb9839595de765f9ca06a4b524
 
-PODFILE CHECKSUM: aafe91acc616949ddb318b77800a7f51bffa2a4c
+PODFILE CHECKSUM: 7368163408c647b7eb699d0d788ba6718e18fb8d
 
-COCOAPODS: 1.9.3
+COCOAPODS: 1.10.1

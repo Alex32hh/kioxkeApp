@@ -1,11 +1,15 @@
 import 'dart:convert';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_icons/flutter_icons.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:kioxkenewf/main.dart';
+import 'package:kioxkenewf/models/viewStyles.dart';
 import 'package:kioxkenewf/views/cadastro.dart';
 import 'package:kioxkenewf/views/home.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:kioxkenewf/models/functions.dart';
 
 class Login extends StatefulWidget {
   @override
@@ -65,6 +69,7 @@ class _LoginState extends State<Login> {
     //final int counter = (prefs.getInt('counter') ?? 0) + 1;
       if(prefs.getString("email") != null){
          print(prefs.getString("email")+prefs.getString("nome"));
+         await checkdata();
          Navigator.pushAndRemoveUntil(context,MaterialPageRoute(builder: (context) =>  HomeView(prefs.getString("nome"),prefs.getString("email"))),(Route<dynamic> route) => false);
       }
     }
@@ -113,7 +118,7 @@ Widget build(BuildContext context) {
 
           Container(
              width: MediaQuery.of(context).size.width,
-             height: MediaQuery.of(context).size.height /2,
+             height: MediaQuery.of(context).size.height /2.6,
              alignment: Alignment.topCenter,
              child: Column(
                crossAxisAlignment: CrossAxisAlignment.center,
@@ -126,13 +131,10 @@ Widget build(BuildContext context) {
             ),
 
             Container(
-             width: MediaQuery.of(context).size.width-25,
+             width: MediaQuery.of(context).size.width,
             //  height: MediaQuery.of(context).size.height /2.4,
-             decoration: BoxDecoration(
-             color: Color.fromRGBO(175, 175, 175,.3),
-             borderRadius: BorderRadius.all(Radius.circular(10))
-             ),
-             child: Column(
+             child: Container(
+               child:Column(
                children: [
                  Form(
                  key: _formKey,
@@ -141,21 +143,41 @@ Widget build(BuildContext context) {
                      Text(""),
                      inputlista("Email",false,TextInputType.emailAddress),
                      senhaInput("Palavra-Passe"),
+                     
+                     contButton("Esqueceu a senha?",Colors.black,(){
+                          Navigator.push(context,MaterialPageRoute(builder: (context) => Cadastro()));
+                     }),
+
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                         socialDott("images/faceLogo.png",Colors.blue),
+                          socialDott("images/goLogo.png",Colors.white),
+                           socialDott("images/apLogo.png",Colors.grey[800])
+                      ],
+                    ),
+
+                     SizedBox(
+                       height: 20,
+                     ),
+
                      loginButton("Iniciar Sessao",Color.fromRGBO(253, 172, 66,1),true,Colors.white,(){
                         _login();
                          setState(() {
                           isloading = true;
                          });
                      }),
-                     loginButton("Não tem Conta? Crie uma aqui",Colors.transparent,false,Colors.black,(){
+                    
+                     contButton("Não tem Conta? Crie uma aqui",primaryColor,(){
                           Navigator.push(context,MaterialPageRoute(builder: (context) => Cadastro()));
                      })
+
                    ]
                     )
                  )
                ],
              ),
-            )
+            ))
             ], 
           ),
         )
@@ -164,10 +186,12 @@ Widget build(BuildContext context) {
 }
 
 Widget loginButton(String labelText,Color cor,bool isSubmited,Color corTexto,Function submit){
-  return SizedBox(
-          width: MediaQuery.of(context).size.width-45, //Full width
-          height: 55,
-    child:FlatButton(
+  return Padding(
+    padding: EdgeInsets.all(10),
+    child: SizedBox(
+      width: 60,
+      height: 60,
+      child:FlatButton(
        color: cor,
        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
       onPressed:() async{
@@ -179,16 +203,59 @@ Widget loginButton(String labelText,Color cor,bool isSubmited,Color corTexto,Fun
     },
    padding:EdgeInsets.all(0.0),
    child:isSubmited? isloading? SpinKitWave(color: Colors.white,size: 40.0,):
-   Text("$labelText",style: TextStyle(color:corTexto, fontSize: 15, fontWeight: FontWeight.bold),):
+   Icon(Feather.arrow_right_circle,color: Colors.white,):
    Text("$labelText",style: TextStyle(color:corTexto, fontSize: 13, fontWeight: FontWeight.bold),),
  )
+   )
+   );
+}
+
+
+Widget contButton(String labelText,Color corTexto,Function submit){
+  return Padding(
+    padding: EdgeInsets.all(4),
+    child: SizedBox(
+      width: MediaQuery.of(context).size.width/2,
+      height: 30,
+      child:TextButton(
+     style: ButtonStyle(
+      
+     ),
+      onPressed:() async{
+        submit();
+       FocusScopeNode currentFocus = FocusScope.of(context);
+       if (!currentFocus.hasPrimaryFocus) {
+          currentFocus.unfocus();
+        }
+    },
+   child:Text("$labelText", textAlign:TextAlign.end , style: TextStyle(color:corTexto, fontSize: 13),),
+ )
+   )
+   );
+}
+
+
+Widget socialDott(String imgUrl,Color colorData){
+  return Padding(
+    padding: EdgeInsets.all(5),
+    child: SizedBox(
+      width: MediaQuery.of(context).size.width/3.4,
+      height: 40,
+      child:FlatButton(
+       color:colorData,
+       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      onPressed:(){},
+    padding:EdgeInsets.all(0.0),
+    child:Image.asset(imgUrl,width: 25,height: 25,)
+ )
+   )
    );
 }
 
 Widget logo(){
   return Container(
-     width:300,
-     height:130,
+     width:200,
+     height:100,
      alignment: Alignment.center,
      child: Image.asset('images/logo.png')
   );
@@ -199,8 +266,8 @@ Widget textLogo(){
     // color: Colors.red,
     alignment: Alignment.center,
     width: MediaQuery.of(context).size.width-10,
-    height: 50,
-    child: Text(' A sua livraria na palma da mão. \n Inicio de sessão',textAlign:TextAlign.center, style: TextStyle(color:Color.fromRGBO(253, 172, 66,1), fontSize: 15)),
+    height: 60,
+    child: Text(' A sua livraria na palma da mão. \n Inicio de sessão',textAlign:TextAlign.center, style: TextStyle(color:Color.fromRGBO(253, 172, 66,1), fontSize: 13)),
   );
 }
 
@@ -214,14 +281,14 @@ Widget inputlista(String label,bool isObcure,TextInputType typeKeib){
     textAlign: TextAlign.left,
     obscureText: isObcure,
     decoration: InputDecoration(
-      suffixIcon: isObcure?IconButton(icon: Icon(Feather.eye,color: Colors.white,), onPressed: (){
+      suffixIcon: isObcure?IconButton(icon: Icon(Feather.eye,color: Colors.grey,), onPressed: (){
         setState(() {
           isObcure = false;
         });
-      }):Icon(Icons.person,color: Colors.white,),
+      }):Icon(Icons.person,color: Colors.grey,),
       hintText: '$label',
-      hintStyle: TextStyle(color:Colors.white,fontWeight: FontWeight.bold),
-      fillColor: Color.fromRGBO(175, 175, 175, .5),
+      hintStyle: TextStyle(color:Colors.grey),
+      fillColor: Color.fromRGBO(175, 175, 175, .2),
       filled: true,
       contentPadding: const EdgeInsets.all(15.0),
       border:OutlineInputBorder(
@@ -244,14 +311,14 @@ Widget senhaInput(String label){
     textAlign: TextAlign.left,
     obscureText: isbosecured,
     decoration: InputDecoration(
-      suffixIcon:IconButton(icon: Icon(isbosecured == true?Icons.visibility_off:Icons.visibility,color: Colors.white,), onPressed: (){
+      suffixIcon:IconButton(icon: Icon(isbosecured == true?Icons.visibility_off:Icons.visibility,color: Colors.grey,), onPressed: (){
         setState(() {
          isbosecured = !isbosecured; 
         });
       }),
       hintText: '$label',
-      hintStyle: TextStyle(color:Colors.white,fontWeight: FontWeight.bold),
-      fillColor: Color.fromRGBO(175, 175, 175, .5),
+      hintStyle: TextStyle(color:Colors.grey),
+      fillColor: Color.fromRGBO(175, 175, 175, .2),
       filled: true,
       contentPadding: const EdgeInsets.all(15.0),
       border:OutlineInputBorder(
@@ -265,22 +332,21 @@ Widget senhaInput(String label){
 
 }
 
-void sucesso(String nome,String email){
+void sucesso(String nome,String email) async {
+     
       _scafoldkey.currentState.showSnackBar(
         SnackBar( content: Text("Login feito com sucesso!"),
         backgroundColor: Colors.green, duration: Duration(seconds: 3),)
       );
-      Future.delayed(Duration(seconds: 2)).then((_){
-          setState(() {
-            isloading = false;
-            });
-          _saveSession(nome);
-          Navigator.pushAndRemoveUntil(context,MaterialPageRoute(builder: (context) =>  HomeView(nome,email)),(Route<dynamic> route) => false);
-      });
+      _saveSession(nome);
+
+      await checkdataPub();
+      Navigator.pushAndRemoveUntil(context,MaterialPageRoute(builder: (context) =>  Main()),(Route<dynamic> route) => false);
    
     }
 
 void falha(){
+        // ignore: deprecated_member_use
         _scafoldkey.currentState.showSnackBar(
         SnackBar( content: Text("Dados inválidos. Por favor inserir dados corretos."),
            backgroundColor: Colors.redAccent, duration: Duration(seconds: 4),)

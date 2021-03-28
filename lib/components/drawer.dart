@@ -1,8 +1,13 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_icons/flutter_icons.dart';
+import 'package:kioxkenewf/models/database.dart';
+import 'package:kioxkenewf/models/functions.dart';
 import 'package:kioxkenewf/views/Login.dart';
 import 'package:kioxkenewf/views/userdataEdit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sqflite/sqflite.dart';
 
 class DrawerPage extends StatelessWidget {
     
@@ -69,12 +74,27 @@ Widget listItem(IconData icon,String titulo,Function calback){
   }
 
  void logoff(BuildContext context)async{
+
    SharedPreferences preferences = await SharedPreferences.getInstance();
-   await preferences.remove('email');
-   await preferences.remove('nome');
+   File file = await localFileget("dataAll");
+   if(File(file.path).existsSync()){
+    await deliteAlldata("dataAll");
+    await deliteAlldata("populares");
+   }
+   await preferences.clear();
+   Directory(await getlocalPath).delete(recursive: true);
    //adiocionar opcoes de remover os livros baixados
    Navigator.pushAndRemoveUntil(context,MaterialPageRoute(builder: (context) =>  Login()),(Route<dynamic> route) => false);
+   await cleanDatabase();
  }
+
+ Future<void> cleanDatabase() async {
+      final db = await DatabaseHelper.instance.database;
+      await db.execute("DELETE FROM desejosLista");
+      await db.execute("DELETE FROM livrosBaixados");
+  }
+
+
 
  showAlertDialog(BuildContext context,Function callBack) {
   // set up the buttons

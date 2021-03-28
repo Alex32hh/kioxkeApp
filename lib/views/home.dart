@@ -12,9 +12,13 @@ import 'package:http/http.dart' as http;
 import 'package:kioxkenewf/models/database.dart';
 import 'package:kioxkenewf/models/functions.dart';
 import 'package:kioxkenewf/models/viewStyles.dart';
+import 'package:kioxkenewf/util/bookItem.dart';
+import 'package:kioxkenewf/util/bookModel.dart';
 import 'package:kioxkenewf/util/checkInternet.dart';
 import 'package:kioxkenewf/views/detalhes.dart';
 import 'package:kioxkenewf/views/tabs.dart';
+import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class HomeView extends StatefulWidget {
@@ -22,30 +26,34 @@ class HomeView extends StatefulWidget {
   _HomeViewState createState() => _HomeViewState();
   final String nome,email;
   HomeView(this.nome,this.email);
-
-
 }
-
-
 class _HomeViewState extends State<HomeView> {
 
+  FocusNode _focus = new FocusNode();
+
+  
   final TextEditingController _filter = new TextEditingController();
 
   final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey = new GlobalKey<RefreshIndicatorState>();
   Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
   final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
   final PageController pageviewController = new PageController();
-  List<Map<String,dynamic>> desejolist = new List<Map<String,dynamic>>(); 
-  List<Map<String,dynamic>> carrinhodata = new List<Map<String,dynamic>>();
+  List<Map<String,dynamic>> desejolist = []; 
+  List<Map<String,dynamic>> carrinhodata = [];
   
-  List list = List();
-  List destaques = List();
+  List list = [];
+  List destaques = [];
   String _searchText = "";
   int _selectedIndex = 0;
+  int dropDownValue = 0;
 
-  List names = new List();
+  List names = [];
   
   Function callbackOpen;
+
+  //drop down menu
+  String _dataSelection,_categoriaSelect,_autorSelect;
+
    @override
   void initState() {
     super.initState();
@@ -54,6 +62,7 @@ class _HomeViewState extends State<HomeView> {
     getFiles();
     stateSimple();
     activateCount(widget.email);
+    _focus.addListener(_onFocusChange);
   }
 
     @override
@@ -66,31 +75,39 @@ class _HomeViewState extends State<HomeView> {
 
   @override
   Widget build(BuildContext context) {
+    // getTotalDb();
+    final model = Provider.of<BooksModel>(context, listen: false);
     return Scaffold(
       key: _scaffoldKey,
       appBar: AppBar(
         centerTitle: true,
         elevation: 0.0,
-        backgroundColor: primaryColor,
-       title: Text("Kioxke"),
-       leading:  IconButton(icon: Icon(Icons.sort), onPressed: () => _scaffoldKey.currentState.openDrawer(),),
+        backgroundColor: Color.fromRGBO(250, 250, 250, 0.9),
+       title: Container(
+         width: 90,
+         height: 50,
+         child:Image.asset('images/logoTex.png')),
+       leading:  IconButton(icon: Icon(Icons.sort,color: primaryColor),onPressed: () => _scaffoldKey.currentState.openDrawer(),),
        actions: [
-           InkWell(
-             onTap:() => _scaffoldKey.currentState.openEndDrawer(),
-             child:SizedBox(
-             width: 45,
-             child:desejolist.length <= 0 && carrinhodata.length <= 0?Icon(Icons.more_vert,color: Colors.white,):
-             Badge(
-              padding:EdgeInsets.all(4),
-              alignment:Alignment.center,
-              position: BadgePosition.topEnd(top: 10,end: 10),
-              badgeColor:Colors.red,
-              child: Icon(Icons.more_vert,color: Colors.white,),
-            )
-             
-             )
-            ),
+        Consumer<BooksModel>(
+          builder: (context, item, child) {
+              return InkWell(
+                onTap:() => _scaffoldKey.currentState.openEndDrawer(),
+                child:SizedBox(
+                width: 45,
+                child:item.docs.length <= 0 && item.docCart.length <= 0?Icon(Icons.more_vert,color: Colors.grey,):
+                Badge(
+                  padding:EdgeInsets.all(4),
+                  alignment:Alignment.center,
+                  position: BadgePosition.topEnd(top: 10,end: 10),
+                  badgeColor:Colors.red,
+                  child: Icon(Icons.more_vert,color: Colors.grey,),
+                ) 
+                )
+              );
 
+        }),
+           
         ],
       ),
       body:PageView(
@@ -99,7 +116,10 @@ class _HomeViewState extends State<HomeView> {
         controller: pageviewController,
         children: [
           _homeView(),
-          Tabs()
+          Tabs(identify:"Livros"),
+          Tabs(identify:"Revista"),
+          Tabs(identify:"Jornal"),
+          Tabs(identify:"Bd")
         ],
       ),
      bottomNavigationBar: BottomNavigationBar(
@@ -131,7 +151,7 @@ class _HomeViewState extends State<HomeView> {
       onTap: _onItemTapped,
     ),
      drawer: DrawerPage(widget.nome,pageviewController,widget.email),
-     endDrawer: EndDrawerPage(widget.nome,carrinhodata.length.toString(),desejolist.length.toString()),
+     endDrawer: EndDrawerPage(widget.nome,carrinhodata.length.toString()),
     );
   }
 
@@ -149,10 +169,8 @@ Widget _homeView(){
             Padding(padding: EdgeInsets.all(10),
             child:TextField(
                 controller:_filter,
+                focusNode: _focus,
                 textInputAction: TextInputAction.go,
-                onSubmitted: (value) {
-                    print("search");
-                },
                 textAlign: TextAlign.left,
                 textAlignVertical: TextAlignVertical.center,
                 maxLines: 1,
@@ -161,9 +179,14 @@ Widget _homeView(){
                 ),
                 cursorColor: primaryColor,
                 decoration: InputDecoration(
-                  prefixIcon: _filter.value.text.length > 0?IconButton(icon: Icon(Icons.close, color: primaryColor,), onPressed: (){
+                    border: OutlineInputBorder(
+                    borderRadius:BorderRadius.all(
+                      Radius.circular(10.0),
+                    ),
+                  ),
+                  prefixIcon: _focus.hasFocus?IconButton(icon: Icon(Icons.close, color: primaryColor,), onPressed: (){
                     _filter.clear();
-                    // _filter.dispose();
+                   _focus.unfocus();
                   }):null,
                   alignLabelWithHint: false,
                   hintText: "O que Procura?",
@@ -172,9 +195,7 @@ Widget _homeView(){
                   ),
                     filled: true,
                     fillColor: Colors.grey[200],
-                    // prefix: IconButton(icon: Icon(Icons.close_rounded, color: primaryColor,), onPressed: (){}),
-                    suffixIcon: IconButton(icon: Icon(Icons.dashboard_outlined, color: primaryColor,), onPressed: (){}),
-                        border: InputBorder.none,
+
                         focusedBorder: InputBorder.none,
                         enabledBorder: InputBorder.none,
                         errorBorder: InputBorder.none,
@@ -182,8 +203,10 @@ Widget _homeView(){
                         contentPadding:
                         EdgeInsets.only(left: 15, bottom: 16, top: 11, right: 15),
                     ),
-              )),
-           _filter.value.text.length <= 0?   
+              )
+              
+              ),
+          !_focus.hasFocus && _searchText==""?   
            mainContent():
            searchContent()
           ],
@@ -198,7 +221,23 @@ Widget searchContent(){
     List tempList = new List();
     for (int i = 0; i < list.length; i++) {
       if (list[i]['titulo'].toLowerCase().contains(_searchText.toLowerCase())) {
-        tempList.add(list[i]);
+        if(_dataSelection != null || _categoriaSelect != null || _autorSelect != null){
+
+          if(_dataSelection == list[i]['data'])
+           if(!tempList.contains(list[i]))
+           tempList.add(list[i]);
+
+           if(_autorSelect == list[i]['autor'])
+             if(!tempList.contains(list[i]))
+              tempList.add(list[i]);
+
+           if(_categoriaSelect == list[i]['subcate'])
+            if(!tempList.contains(list[i]))
+            tempList.add(list[i]);
+
+        }else
+           tempList.add(list[i]);
+
       }
     }
     // names.clear();
@@ -208,19 +247,90 @@ Widget searchContent(){
     width: MediaQuery.of(context).size.width,
     height: MediaQuery.of(context).size.height,
     
-    child:ListView.builder(
-    itemCount:names == null ? 0 :names.length,
-    itemBuilder: (BuildContext context, int index) {
-      return new ListTile(
-        title: Text(names[index]['titulo']),
-        onTap: (){
-           Navigator.push(context,MaterialPageRoute(builder: (context) => Datalhes((){
+    child: Column(
+      children:[
+        Padding(
+          padding: EdgeInsets.all(10),
+          child:
+         
+         _filter.value.text.toString().length>0?Container(
+           width: MediaQuery.of(context).size.width,
+           height: 44,
+           child: ListView(
+          scrollDirection: Axis.horizontal,
+          children:[
+              DropdownButton<String>(
+                hint: Text('Autor'), // Not necessary for Option 1
+                value: _autorSelect,
+                items: itemsAutor.map((String value) {
+                  return  DropdownMenuItem<String>(
+                    value: value,
+                    child:  Text(value,style:TextStyle(color: primaryColor)),
+                  );
+                }).toList(),
+                onChanged: (a) {
+                  setState(() {
+                    _autorSelect = a;
+                  });
+                },
+              ),
+              
+               DropdownButton<String>(
+                hint: Text('Categoria'), // Not necessary for Option 1
+                value: _categoriaSelect,
+                items: itemsCategoria.map((String value) {
+                  return  DropdownMenuItem<String>(
+                    value: value,
+                    child:  Text(value,style:TextStyle(color: primaryColor)),
+                  );
+                }).toList(),
+                onChanged: (a) {
+                  setState(() {
+                    _categoriaSelect = a;
+                  });
+                },
+              ),
+
+              DropdownButton<String>(
+                hint: Text('Data'), // Not necessary for Option 1
+                value: _dataSelection,
+                items: itemsData.map((String value) {
+                  return  DropdownMenuItem<String>(
+                    value: value,
+                    child:  Text(value,style:TextStyle(color: primaryColor)),
+                  );
+                  }).toList(),
+                onChanged: (a) {
+                  setState(() {
+                    _dataSelection = a;
+                  });
+                },
+              ),
+
+              
+
+          ]
+          )
+        ):SizedBox()
+      ),
+       Expanded(
+         child: ListView.builder(
+         itemCount:names == null ? 0 :names.length,
+         itemBuilder: (BuildContext context, int index) {
+           return new ListTile(
+             title: Text(names[index]['titulo']),
+              onTap: (){
+                    Navigator.push(context,MaterialPageRoute(builder: (context) => Datalhes((){
                     Navigator.pop(context);
                   },names[index]['url'],names[index]['titulo'],names[index]['capa'],names[index]['autor'],names[index]['likes'],names[index]['preco'],names[index]['descricao'],names[index]['id'])));
-        },
-      );
-    },
-   )
+                },
+              );
+            },
+          )
+       )
+
+      ]
+    )
   );
 }
 
@@ -242,7 +352,9 @@ stateSimple() {
 Widget mainContent(){
   return Container(
         width: MediaQuery.of(context).size.width,
-        child: Column(
+        child: Consumer<BooksModel>(
+        builder: (context, item, child) {
+          return Column(
           mainAxisSize: MainAxisSize.max,
           children: [
            pageTitle("Novos",context),
@@ -251,7 +363,7 @@ Widget mainContent(){
             height: 240,
              child: ListView.builder(
                scrollDirection: Axis.horizontal,
-                itemCount: destaques.length,
+                itemCount: item.bookItem.length,
                 itemBuilder: (BuildContext context, int index) {
                   return new OpenContainer(
                     openElevation:0.0,
@@ -259,38 +371,45 @@ Widget mainContent(){
                     transitionType:ContainerTransitionType.fade,
                     closedBuilder:(context,action){
                       callbackOpen = action;
-                   return verticalBox(action,context,destaques[index]['titulo'],destaques[index]['capa'],destaques[index]['autor'],destaques[index]['likes'],destaques[index]['src'],destaques[index]['preco'],destaques[index]['descricao'],destaques[index]['id'],0);
+                   return verticalBox(action,context, item.bookItem[index].titulo,item.bookItem[index].capa,item.bookItem[index].autor,item.bookItem[index].likes,item.bookItem[index].src,item.bookItem[index].preco,item.bookItem[index].descricao,item.bookItem[index].id,0);
                   } , openBuilder: (context,action){
-                     return Datalhes(action,destaques[index]['src'], destaques[index]['titulo'], destaques[index]['capa'], destaques[index]['autor'], destaques[index]['likes'], destaques[index]['preco'], destaques[index]['descricao'], destaques[index]['id'],isFavorite:0);
+                     return Datalhes(action,item.bookItem[index].src, item.bookItem[index].titulo, item.bookItem[index].capa, item.bookItem[index].autor, item.bookItem[index].likes, item.bookItem[index].preco, item.bookItem[index].descricao, item.bookItem[index].id,isFavorite:0,categoria:item.bookItem[index].categoria,subcategoria:item.bookItem[index].subcate);
                   });
                 })
              ),
 
            pageTitle("Mais Acessados",context),
-
-         Container(
+      
+      Consumer<BooksModel>(
+        builder: (context, item, child) {
+         return Container(
             width: MediaQuery.of(context).size.width,
-            height: 190 * double.parse(list.length.toString()),
+            height: 190 * double.parse(item.bookPopulares.length.toString()),
              child: ListView.builder(
                 physics: NeverScrollableScrollPhysics(),
-                itemCount: list.length,
+                itemCount: item.bookPopulares.length,
                 itemBuilder: (BuildContext context, int index) {
                    return new OpenContainer(
                      openElevation:0.0,
                      closedElevation: 0.0,
                     closedBuilder:(context,action){
                        callbackOpen = action;
-                       return horizontalBox(action,context,list[index]['titulo'],list[index]['capa'],list[index]['autor'],list[index]['likes'],list[index]['src'],list[index]['preco'],list[index]['descricao'],list[index]['id'],0);
+                       return horizontalBox(action,context,item.bookPopulares[index].titulo,item.bookPopulares[index].capa,item.bookPopulares[index].autor,item.bookPopulares[index].likes,item.bookPopulares[index].src,item.bookPopulares[index].preco,item.bookPopulares[index].descricao,item.bookPopulares[index].id,0);
                     },openBuilder: (context,action){
-                       return Datalhes(action,list[index]['src'], list[index]['titulo'], list[index]['capa'], list[index]['autor'], list[index]['likes'], list[index]['preco'], list[index]['descricao'], list[index]['id'],isFavorite:0);
+                       return Datalhes(action,item.bookPopulares[index].src, item.bookPopulares[index].titulo, item.bookPopulares[index].capa, item.bookPopulares[index].autor, item.bookPopulares[index].likes, item.bookPopulares[index].preco, item.bookPopulares[index].descricao, item.bookPopulares[index].id,isFavorite:0,categoria:item.bookPopulares[index].categoria,subcategoria:item.bookPopulares[index].subcate);
                     }
 
                    );
                  
                 })
-         )
+         );
       
-          ]));
+         })
+
+        ]);
+         }
+        )
+      );
 }
 
 void _onItemTapped(int index) {
@@ -311,15 +430,27 @@ Future<void>  _refresh() async{
 
 void getFiles() async{
 
-  readContent("dataAll.spv").then((value){
-      list = json.decode(value) as List;
-  });
- 
-  readContent("populares.spv").then((value){
-    destaques =  json.decode(value)  as List;
-  });
- 
- 
+  list = json.decode(await readContent("dataAll.spv")) as List;
+  destaques = json.decode(await readContent("populares.spv")) as List;
+  
+  for(int x =0;x < list.length;x++){
+    if(!itemsData.contains(list[x]['data']))
+        itemsData.add(list[x]['data']);
+
+    if(!itemsAutor.contains(list[x]['autor']))
+        itemsAutor.add(list[x]['autor']);
+
+    if(!itemsCategoria.contains(list[x]['subcate']))
+        if(list[x]['subcate'].toString().contains("/"))
+           for(int a=0;a< list[x]['subcate'].toString().split("/").length;a++){
+              itemsCategoria.add(list[x]['subcate'].toString().split("/")[a]);
+           }
+        else
+          itemsCategoria.add(list[x]['subcate']);
+
+  }
+
+
 }
 
 
@@ -330,6 +461,7 @@ void getTotalDb() async{
       
     });
  }
+
 
 void activateCount(String email) async{
 
@@ -376,6 +508,12 @@ void activateCount(String email) async{
     );
     
     }
+
+
+
+void _onFocusChange(){
+    print("Focus: "+_focus.hasFocus.toString());
+  }
 
 
 }

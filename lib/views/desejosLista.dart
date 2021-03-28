@@ -1,5 +1,8 @@
 import 'dart:io';
 import 'package:kioxkenewf/models/functions.dart';
+import 'package:kioxkenewf/util/bookItem.dart';
+import 'package:kioxkenewf/util/bookModel.dart';
+import 'package:provider/provider.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -37,8 +40,7 @@ class _WishlistWidgetState extends State<WishlistWidget> {
 
   @override
   Widget build(BuildContext context) {
-  
-    return Scaffold(
+        return Scaffold(
       appBar: AppBar(
         backgroundColor:primaryColor,
         title: Text("Lista de Desejos",
@@ -53,21 +55,26 @@ class _WishlistWidgetState extends State<WishlistWidget> {
             //  Icon(Icons.more_vert,color: Colors.white,)
           ],
       ),
-      body: Container(
-        constraints: BoxConstraints.expand(),
-        child:ListView.builder(
-            itemCount: queryRows.length,
-            itemBuilder: (BuildContext context, int index){
-            
-            return queryRows[index]['tipo'] == 0?horisontal(context:context,titulo:queryRows[index]['nome'], imageUrl:queryRows[index]['imageUrl'], autor:"", likes:"0", urlBook:queryRows[index]['urlBook'], preco:queryRows[index]['preco'], descricao:queryRows[index]['descricao'], id:queryRows[index]['id'].toString(),idcloud: queryRows[index]['idcloud']):SizedBox();
+      body:Consumer<BooksModel>(
+        builder: (context, item, child) {
+          // int count = item.docs.length;
+          return  Container(
+              constraints: BoxConstraints.expand(),
+              child: ListView.builder(
+                  itemCount: item.docs.length,
+                  itemBuilder: (BuildContext context, int index){
+                  return item.docs[index].tipo == 0?horisontal(context:context,titulo:item.docs[index].titulo, imageUrl:item.docs[index].capa, autor:"", likes:"0", urlBook:item.docs[index].src, preco:item.docs[index].preco, descricao:item.docs[index].descricao, id:item.docs[index].id,idcloud: item.docs[index].idCloud,model:item):SizedBox();
+              },
+            )
+          );
         },
-      )
-     )
+       
+      ),
     );
   }
 
 
- Widget horisontal({BuildContext context,String titulo,String imageUrl,String autor,String likes,String urlBook,String preco,String descricao,String id,int idcloud}){
+ Widget horisontal({BuildContext context,String titulo,String imageUrl,String autor,String likes,String urlBook,String preco,String descricao,String id,int idcloud,BooksModel model}){
   FlutterMoneyFormatter precoProduto = FlutterMoneyFormatter(amount: double.parse(preco));
   return 
   Card( 
@@ -144,12 +151,18 @@ class _WishlistWidgetState extends State<WishlistWidget> {
                           child: IconButton(icon:Icon(Feather.trash,size: 25, color:Colors.red,), onPressed: () async{
                             
                             showAlertDialog(context,() async{
+                               setState(() {});
                                 final SharedPreferences prefs = await _prefs;
                                 prefs.remove(titulo+"_favorite");
-                                int value = await DatabaseHelper.instance.delete(int.parse(id));
-                                desejosDeliteItems(idcloud.toString());
-                                loadAsset();
-                                setState(() {});
+                                model.deliteBookDesejo(int.parse(id));
+                                model.addListener(() {
+                                      desejosDeliteItems(idcloud.toString());
+                                });
+                                // int value = await DatabaseHelper.instance.delete(int.parse(id));
+                                
+                            
+                                // loadAsset();
+                               
                             });
                             
                             

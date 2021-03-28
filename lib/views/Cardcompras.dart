@@ -9,6 +9,9 @@ import 'dart:ui';
 import 'package:kioxkenewf/models/database.dart';
 import 'package:kioxkenewf/models/functions.dart';
 import 'package:kioxkenewf/models/viewStyles.dart';
+import 'package:kioxkenewf/util/bookModel.dart';
+import 'package:kioxkenewf/views/biblioteca/historicoCompra.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
@@ -45,6 +48,7 @@ class _CardComprasState extends State<CardCompras> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor:primaryColor,
+        centerTitle: true,
         title: Text("Carrinho de Compras",
           textAlign: TextAlign.center,
             style: TextStyle(
@@ -57,56 +61,91 @@ class _CardComprasState extends State<CardCompras> {
             //  Icon(Icons.more_vert,color: Colors.white,)
           ],
       ),
-      body: Container(
+      body:Consumer<BooksModel>(
+        builder: (context, item, child) { 
+          return Container(
         constraints: BoxConstraints.expand(),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          mainAxisAlignment: MainAxisAlignment.end,
+        child: Stack(
           children: [
-            Padding(
-              padding: EdgeInsets.all(10),
-              child:
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Container(
-                  child:Text("Total: $totalPagarLabel AOA",style:optionStyle)
-                ),
-                FlatButton(
-                  color:Colors.amber,
-                  onPressed:() async{
-                    showNormalAlert(context,(){deployCadsOnly();},"Aviso","Tem certeza que deseja terminar a Compra?");
-                  },
-                 child: Container(
-                  width: 150,
-                  height:40,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    // color: Colors.amber,
-                    borderRadius: BorderRadius.all(Radius.circular(5))
-                  ),
-                  child:Text("Terminar a Compra")
-                ),)
-              ],
-              )
-            ),
             Container(
               width:MediaQuery.of(context).size.width,
               height:MediaQuery.of(context).size.height /1.3,
               child:ListView.builder(
             itemCount: queryRowsCard.length,
             itemBuilder: (BuildContext context, int index){
-            return queryRowsCard[index]['tipo'] == 1?horisontal(titulo:queryRowsCard[index]['nome'], imageUrl:queryRowsCard[index]['imageUrl'], autor:"", likes:"0", urlBook:queryRowsCard[index]['urlBook'], preco:queryRowsCard[index]['preco'], descricao:queryRowsCard[index]['descricao'], id:queryRowsCard[index]['id'].toString(),qtdview: queryRowsCard[index]['quantidade'],idcloud: queryRowsCard[index]['idcloud']):SizedBox();
+            return queryRowsCard[index]['tipo'] == 1?horisontal(titulo:queryRowsCard[index]['nome'], imageUrl:queryRowsCard[index]['imageUrl'], autor:"", likes:"0", urlBook:queryRowsCard[index]['urlBook'], preco:queryRowsCard[index]['preco'], descricao:queryRowsCard[index]['descricao'], id:queryRowsCard[index]['id'].toString(),qtdview: queryRowsCard[index]['quantidade'],idcloud: queryRowsCard[index]['idcloud'],model: item):SizedBox();
             },
       
       )
-            )
-          ],
-        )
-     )
-    );
+            ),
+          Align(
+            alignment: Alignment.bottomCenter,
+              child:Card  (
+            
+            child: Container(
+            padding: EdgeInsets.all(5),
+            height: 130,
+                child: Column(children: [
+                     Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                     Flexible(
+                     child: TextField(
+                        decoration: InputDecoration(
+                          border: InputBorder.none,
+                          hintText: 'Cupon de Desconto'
+                        ),
+                      )),
+                      FlatButton(
+                      color: Colors.red[300],
+                      textColor: Colors.white,
+                      padding: EdgeInsets.all(8.0),
 
-  
+                      onPressed: () {
+                        /*...*/
+                      },
+                      child: Text(
+                        "Aplicar",
+                        // style: TextStyle(fontSize: 20.0),
+                      ),
+                    )
+                    ],
+                  ),
+                    Divider( color: Colors.black45),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          child:Text(" Total: $totalPagarLabel AOA",style:optionStyle)
+                        ),
+                        FlatButton(
+                          color:Colors.amber,
+                          onPressed:() async{
+                            showNormalAlert(context,(){deployCadsOnly();},"Aviso","Tem certeza que deseja terminar a Compra?");
+                          },
+                        child: Container(
+                          width: 150,
+                          height:40,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            // color: Colors.amber,
+                            borderRadius: BorderRadius.all(Radius.circular(5))
+                          ),
+                          child:Text("Terminar a Compra")
+                        ),)
+                      ],
+                    )
+               ]
+              )
+            ),
+
+          )
+
+        )],
+        )
+      );
+     }
+    ));
   }
 
    waitinTime() {
@@ -114,7 +153,7 @@ class _CardComprasState extends State<CardCompras> {
   }
 
 
-Widget horisontal({String titulo,String imageUrl,String autor,String likes,String urlBook,String preco,String descricao,String id,int qtdview,int idcloud}){
+Widget horisontal({String titulo,String imageUrl,String autor,String likes,String urlBook,String preco,String descricao,String id,int qtdview,int idcloud,BooksModel model}){
   FlutterMoneyFormatter precoProduto = FlutterMoneyFormatter(amount: double.parse(preco));
   return Card( 
   color: Colors.white,
@@ -176,67 +215,18 @@ Widget horisontal({String titulo,String imageUrl,String autor,String likes,Strin
                    mainAxisAlignment: MainAxisAlignment.end,
                    crossAxisAlignment: CrossAxisAlignment.end,
                    children: [
-               
-                //  Container(
-                //           height: 30,
-                //           child: IconButton(icon:Icon(Feather.minus_circle,size: 25, color:Colors.green,), onPressed: () async{
-
-                //             setState(() async{
-                //                if(qtdview > 1){
-                //                   qtdview--;
-                //                   DatabaseHelper.instance.valuesupdate(int.parse(id),qtdview);
-                //                   loadAsset();
-                //                   setState(() {});
-                //                }
-                //                 else{
-                //                     showAlertDialog(context,() async{
-                //                         final SharedPreferences prefs = await _prefs;
-                //                         prefs.remove(titulo+"_carrinho");
-                //                         int value = await DatabaseHelper.instance.delete(int.parse(id));
-                //                         loadAsset();
-                //                         setState(() {});
-
-                //                     });
-                //                   }
-                              
-                //             });
-                //           })
-                //         ),
-
-                  // Container(
-                  //         height: 30,
-                  //         alignment: Alignment.bottomCenter,
-                  //         child: Text("$qtdview")
-                  //       ),
-
-                  // Container(
-                  //         height: 30,
-                  //         child: IconButton(icon:Icon(Feather.plus_circle,size: 25, color:Colors.green,), onPressed: () async {
-                  //           setState(() async{
-                  //                 qtdview++;
-                  //                 DatabaseHelper.instance.valuesupdate(int.parse(id),qtdview);
-                                     
-                  //                 loadAsset();
-                  //                 setState(() {});
-                  //           });
-                  //         })
-                  //       ),
-                  // SizedBox(
-                  //   width: 20,
-                  // ),
                    Container(
                           height: 30,
                           child: IconButton(icon:Icon(Feather.trash,size: 25, color:Colors.red,), onPressed: () async{
                            
-                               showAlertDialog(context,() async{
-                             
+                            showAlertDialog(context,() async{
                               final SharedPreferences prefs = await _prefs;
                               prefs.remove(titulo+"_carrinho");
-                              int value = await DatabaseHelper.instance.delete(int.parse(id));
+                              model.deliteBookCard(int.parse(id));
+                              // int value = await DatabaseHelper.instance.delete(int.parse(id));
                               cardDeliteItems(idcloud.toString());
                               loadAsset();
                               setState(() {});
-
                             });
 
                           })
@@ -275,28 +265,60 @@ loadAsset() async {
 
 
 void deployCadsOnly() async {
+   
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
     EasyLoading.show(status: 'Aguarde');
-     SharedPreferences prefs = await SharedPreferences.getInstance();
-    queryRowsCard = await DatabaseHelper.instance.queryAll(1);
+
+    String email = prefs.getString("email").toString();
+    List respo =  new List();
+    final response = http.get("https://www.visualfoot.com/api/Card_temp/getSaveData.php?identfy=tb_compras&filtreId=id_compra&filtre=$email");
+    final val = response.then((value){
+       return json.decode(value.body);
+    });
+ 
+    respo  = await val as List;
+
+    if(respo.length > 0){  
+       showNormalAlert(context,(){
+         EasyLoading.dismiss();
+         sendCardToServer(deliteCard:respo[0]['id_carrinho']);
+       },"Aviso!","Não pode ter duas encomendas pendentes em simultâneo.\n\nPretende eliminar a encomenda anterior ou cancelar a actual?");
+     
+       EasyLoading.dismiss();
+    }else{
+      sendCardToServer();
+    }
+
+}
+
+
+void sendCardToServer({String deliteCard}) async{
+   SharedPreferences prefs = await SharedPreferences.getInstance();
+    String email = prefs.getString("email").toString();
+   if(deliteCard != null)
+      final response = http.get("http://visualfoot.com/api/historico/deliteHist.php?id=$deliteCard");
+
+   queryRowsCard = await DatabaseHelper.instance.queryAll(1);
     for(int a=0;a < queryRowsCard.length;a++){
       if(queryRowsCard[a]['tipo'] == 1){
             if(!sedOne){
-              SharedPreferences prefs = await SharedPreferences.getInstance();
-              String email = prefs.getString("email").toString();
               final getEmalSender = await http.get('http://manifexto.com/Kioxke_App/sendCartDetails.php?user_email=$email&user_price=${queryRowsCard[a]['preco'].toString()}&book_title=${queryRowsCard[a]['nome'].toString()}&book_id=$sharEncode');
               sedOne = true;
             }
 
             cardItems(id:queryRowsCard[a]['idcloud'].toString(), titulo:queryRowsCard[a]['nome'], capa:queryRowsCard[a]['imageUrl'],preco:queryRowsCard[a]['preco'].toString(),encode: sharEncode,total: totalPagar.toString());
+            cardDeliteItems(queryRowsCard[a]['idcloud'].toString());
             int value = await DatabaseHelper.instance.deleteBook(queryRowsCard[a]['nome']);
             prefs.setBool(queryRowsCard[a]['nome']+'_carrinho', false);
       }
     }
     
      EasyLoading.showSuccess('Sucesso',dismissOnTap:false);
-    loadAsset();
-      EasyLoading.dismiss();
-  }
+     loadAsset();
+     Navigator.push(context,MaterialPageRoute(builder: (context) =>  Historico(isVerified:true)));
+     EasyLoading.dismiss();
+}
 
 
 void cardItems({String id,String titulo,String capa,String preco,String encode,String total}) async{
